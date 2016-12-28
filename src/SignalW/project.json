@@ -1,0 +1,39 @@
+﻿{
+	"version": "0.6.0-alpha1",
+	"description": "Even simpler real-time web for ASP.NET Core",
+
+	"packOptions": {
+		"repository": {
+			"type": "git",
+			"url": "https://github.com/buybackoff/SignalW"
+		},
+		"tags": [
+			"SignalR SignalW websockets real-time messaging streaming"
+		],
+		"owners": [ "Victor Baybekov" ],
+		"summary": "Even simpler real-time web for ASP.NET Core",
+		"projectUrl": "https://github.com/buybackoff/SignalW",
+		
+	},
+	"buildOptions": {
+		"warningsAsErrors": false,
+		"nowarn": [
+			"CS1591"
+		],
+		"xmlDoc": true,
+		"optimize": true
+	},
+
+	"dependencies": {
+		"NETStandard.Library": "1.6.1-*",
+		"Microsoft.Extensions.Logging": "1.0.0",
+		"Microsoft.AspNetCore.WebSockets": "1.0.0",
+		"Microsoft.AspNetCore.Routing": "1.1.0-*",
+		"Newtonsoft.Json": "9.0.1"
+	},
+
+	"frameworks": {
+		"netstandard1.3": {},
+		"net451": {}
+	}
+}

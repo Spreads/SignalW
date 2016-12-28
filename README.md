@@ -1,12 +1,58 @@
-ASP.NET Core SignalR
+SignalW
 ========
 
-AppVeyor: [![AppVeyor](https://ci.appveyor.com/api/projects/status/80sq517n7peiaxi9/branch/dev?svg=true)](https://ci.appveyor.com/project/aspnetci/signalr/branch/dev)
+Even simpler real-time web for ASP.NET Core.
 
-Travis:   [![Travis](https://travis-ci.org/aspnet/SignalR.svg?branch=dev)](https://travis-ci.org/aspnet/SignalR)
+SignalW is a simplified version of [SignalR](https://github.com/aspnet/SignalR), with only WebSockets as a transport 
+and `MemoryStream` as a message type.
 
-ASP.NET Core SignalR is a new library for ASP.NET Core developers that makes it incredibly simple to add real-time web functionality to your applications. What is "real-time web" functionality? It's the ability to have your server-side code push content to the connected clients as it happens, in real-time.
+* WebSockets work almost everywhere to bother about long polling/SSE/any other transport.
+* Since messages could be framed, we cannot use a single buffer and need a stream to collect
+all chunks. We use [`RecyclableMemoryStream`](https://github.com/Microsoft/Microsoft.IO.RecyclableMemoryStream)
+that pools internals buffers.
+* Serialization is out of scope. It's always a pain to abstract it for a general case, but in 
+every concrete case it could be as simple as using JSON.NET (with extension methods for streams)
+or as flexible as a custom binary encoding.
+* Any generic WebSocket client should work.
 
-This project is part of ASP.NET Core. You can find samples, documentation and getting started instructions for ASP.NET Core at the [Home](https://github.com/aspnet/home) repo.
 
-**Note** To build the project locally at this time you will need the [TypeScript Compiler](https://www.typescriptlang.org/#download-links) on your path.
+For authentication with a bearer token:
+
+**from a C# client:**
+
+```
+WebSocketClient client = new WebSocketClient();
+client.ConfigureRequest = (req) =>
+{
+    req.Headers.Add("Bearer ", _tokenValue);
+};
+```
+
+**from RxJS WebSocketSubject:**
+```
+let wsConfig: WebSocketSubjectConfig = {
+    url: 'wss://localhost.dataspreads.com:5001/websockets/',
+    protocol: [
+    'access_token',
+    token
+    ]
+};
+let ws = new WebSocketSubject<any>(wsConfig);
+```
+then in OWIN pipeline use this trick to populate the correct header
+```
+app.Use((context, next) => {
+    if (!context.Request.Headers.ContainsKey("Authorization")
+        && context.Request.Headers.ContainsKey("Upgrade")) {
+        if (context.WebSockets.WebSocketRequestedProtocols.Count >= 2) {
+            var first = context.WebSockets.WebSocketRequestedProtocols[0];
+            var second = context.WebSockets.WebSocketRequestedProtocols[1];
+            if (first == "access_token") {
+                context.Request.Headers.Add("Authorization", "Bearer " + second);
+                context.Response.Headers.Add("Sec-WebSocket-Protocol", "access_token");
+            }
+        }
+    }
+    return next();
+});
+```

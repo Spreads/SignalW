@@ -80,8 +80,13 @@ namespace Microsoft.AspNetCore.SignalR.Redis
             return PublishAsync(typeof(THub).FullName + "." + connectionId, message);
         }
 
+        public async ValueTask<int> Test() {
+
+        }
+
         public override Task InvokeGroupAsync(string groupName, string methodName, object[] args)
         {
+            
             var message = new InvocationDescriptor
             {
                 Method = methodName,

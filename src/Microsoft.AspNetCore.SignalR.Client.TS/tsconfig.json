@@ -1,9 +1,0 @@
-{
-    "compileOnSave": true,
-    "compilerOptions": {
-        "module": "umd",
-        "target": "es6",
-        "outDir": "../../artifacts/lib/signalr-client-modules"
-    },
-    "include": [ "*.ts" ]
-}
