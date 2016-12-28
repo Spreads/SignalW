@@ -42,21 +42,19 @@ public class DispatchHub : Hub {
 }
 ```
 
-On the Angular side, one could simply use a WebSocketSubject and forward messages to `@ngrx/store` directly 
+On the Angular side, one could simply use a `WebSocketSubject` and forward messages to `@ngrx/store` directly 
 if they have a `type` field. No dependencies, no custom deserialization, no hassle!
 
 
-Authentication with a bearer token:
+Authentication with a bearer token
 ---------------------------------
 
 **From a C# client**
 
 ```
-WebSocketClient client = new WebSocketClient();
-client.ConfigureRequest = (req) =>
-{
-    req.Headers.Add("Bearer ", _tokenValue);
-};
+var client = new ClientWebSocket();
+var header = new AuthenticationHeaderValue("Bearer", _accessToken);
+client.Options.RequestHeaders.Add("Authorization", header.ToString());
 ```
 
 **From JavaScript:**
@@ -95,7 +93,7 @@ app.Use((context, next) => {
 });
 ```
 
-To use SignlaW, create a custom Hub:
+To use SignalW, create a custom Hub:
 ```
 [Authorize]
 public class Chat : Hub {
