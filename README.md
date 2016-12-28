@@ -9,16 +9,47 @@ and `MemoryStream` as a message type.
 * WebSockets work almost everywhere to bother about long polling/SSE/any other transport.
 * Since messages could be framed, we cannot use a single buffer and need a stream to collect
 all chunks. We use [`RecyclableMemoryStream`](https://github.com/Microsoft/Microsoft.IO.RecyclableMemoryStream)
-that pools internals buffers.
-* Serialization is out of scope. It's always a pain to abstract it for a general case, but in 
+that pools internal buffers.
+* Serialization is out of scope. It is always a pain to abstract it for a general case, but in 
 every concrete case it could be as simple as using JSON.NET (with extension methods for streams)
 or as flexible as a custom binary encoding.
 * Any generic WebSocket client should work.
 
+Instead of multiple methods inside Hubs that clients invoked by name, in SignalW we have a single method 
+`async Task OnReceiveAsync(MemoryStream payload)`. If one uses Angular2 with `@ngrx/store` then
+a deserialized-to-JSON message will always have a `type` field, and one could use a custom 
+[`JsonCreationConverter<IMessage>`](https://github.com/buybackoff/SignalW/blob/master/src/SignalW/Serialization.cs#L175)
+to deserialize a message to its correct .NET type. Then one could write multiple methods with the same 
+name that differ only by its parameter type and use `dynamic` keyword to dispatch a message to 
+a correct handler.
 
-For authentication with a bearer token:
+```
+public class DispatchHub : Hub {
+    public override async Task OnReceiveAsync(MemoryStream payload) {
+        object message = payload.Deserialize<IMessage>();
+        // dynamic will dispatch to the correct method
+        dynamic dynMessage = message;
+        await OnReceiveAsync(dynMessage);
+    }
 
-**from a C# client:**
+    public async void OnReceiveAsync(MessageFoo message) {
+        await Clients.Group("foo").InvokeAsync(message.Serialize());
+    }
+
+    public async void OnReceiveAsync(MessageBar message) {
+        await Clients.Group("bar").InvokeAsync(message.Serialize());
+    }
+}
+```
+
+On the Angular side, one could simply use a WebSocketSubject and forward messages to `@ngrx/store` directly 
+if they have a `type` field. No dependencies, no custom deserialization, no hassle!
+
+
+Authentication with a bearer token:
+---------------------------------
+
+**From a C# client**
 
 ```
 WebSocketClient client = new WebSocketClient();
@@ -28,8 +59,14 @@ client.ConfigureRequest = (req) =>
 };
 ```
 
-**from RxJS WebSocketSubject:**
+**From JavaScript:**
+
+It is impossible to add headers to WebSocket constructor in JavaScript, but we could 
+use protocol parameters for this. Here we are using RxJS WebSocketSubject:
+
 ```
+import { WebSocketSubjectConfig, WebSocketSubject } from 'rxjs/observable/dom/WebSocketSubject';
+...
 let wsConfig: WebSocketSubjectConfig = {
     url: 'wss://localhost.dataspreads.com:5001/websockets/',
     protocol: [
@@ -39,7 +76,8 @@ let wsConfig: WebSocketSubjectConfig = {
 };
 let ws = new WebSocketSubject<any>(wsConfig);
 ```
-then in OWIN pipeline use this trick to populate the correct header
+Then in the very beginning of OWIN pipeline (before any identity middleware) 
+use this trick to populate the correct header:
 ```
 app.Use((context, next) => {
     if (!context.Request.Headers.ContainsKey("Authorization")
@@ -56,3 +94,42 @@ app.Use((context, next) => {
     return next();
 });
 ```
+
+To use SignlaW, create a custom Hub:
+```
+[Authorize]
+public class Chat : Hub {
+    public override Task OnConnectedAsync() {
+        if (!Context.User.Identity.IsAuthenticated) {
+            Context.Connection.Channel.TryComplete();
+        }
+        return Task.FromResult(0);
+    }
+
+    public override Task OnDisconnectedAsync() {
+        return Task.FromResult(0);
+    }
+
+    public override async Task OnReceiveAsync(MemoryStream payload) {
+        await Clients.All.InvokeAsync(payload);
+    }
+}
+```
+
+Then add SignalW to the OWIN pipeline and map hubs to a path. Here we use SignalR together 
+with MVC on the "/api" path:
+```
+app.Map("/api/signalw", signalw => {
+    signalw.UseSpreadsDB((config) => {
+        config.MapHub<Chat>("chat", Format.Text);
+    });
+});
+app.Map("/api", apiApp => {
+    apiApp.UseMvc();
+});
+```
+
+Open several pages of [https://www.websocket.org/echo.html](https://www.websocket.org/echo.html)
+and connect to `https://[host]/api/signalw/chat?connectionId=[any value]`. Each page should broadcast
+messages to every other page and this is a simple chat.
+
