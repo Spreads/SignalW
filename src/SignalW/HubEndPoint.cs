@@ -73,6 +73,7 @@ namespace DataSpreads.SignalW {
                 }
 
                 await _hub.OnReceiveAsync(payload);
+                payload.Dispose();
             }
         }
 

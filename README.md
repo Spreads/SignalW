@@ -27,6 +27,9 @@ a correct handler.
 public class DispatchHub : Hub {
     public override async Task OnReceiveAsync(MemoryStream payload) {
         object message = payload.Deserialize<IMessage>();
+		// dispose as soon as it is no longer used becasue it uses pooled buffers inside
+		payload.Dispose(); 
+
         // dynamic will dispatch to the correct method
         dynamic dynMessage = message;
         await OnReceiveAsync(dynMessage);
