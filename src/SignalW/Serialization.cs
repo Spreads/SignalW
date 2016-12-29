@@ -1,9 +1,12 @@
-﻿using System;
-using System.Reflection;
-using System.Runtime.Serialization.Formatters;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Concurrent;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.Serialization.Formatters;
 
 namespace DataSpreads.SignalW {
 
@@ -11,6 +14,12 @@ namespace DataSpreads.SignalW {
     /// Extensions for JSON.NET
     /// </summary>
     public static class JsonExtensions {
+        private static JsonSerializer _serializer = new JsonSerializer();
+        private static JsonSerializer _messageSerializer;
+        private static MessageConverter _messageConverter;
+
+        static JsonExtensions() {
+        }
 
         /// <summary>
         ///
@@ -23,7 +32,7 @@ namespace DataSpreads.SignalW {
         }
 
         internal static IMessage FromJson(this string json) {
-            var obj = JsonConvert.DeserializeObject<IMessage>(json, new MessageConverter());
+            var obj = JsonConvert.DeserializeObject<IMessage>(json, _messageConverter);
             return obj;
         }
 
@@ -70,6 +79,29 @@ namespace DataSpreads.SignalW {
             return message;
         }
 
+        public static void WriteJson<T>(this MemoryStream stream, T value) {
+            using (var sw = new StreamWriter(stream)) {
+                _serializer.Serialize(sw, value);
+            }
+        }
+
+        public static T ReadJson<T>(this MemoryStream stream) {
+            using (var sr = new StreamReader(stream)) {
+                return (T)_serializer.Deserialize(sr, typeof(T));
+            }
+        }
+
+        public static IMessage ReadJsonMessage(this MemoryStream stream) {
+            if (_messageSerializer == null) {
+                _messageSerializer = new JsonSerializer();
+                _messageConverter = new MessageConverter();
+                _messageSerializer.Converters.Add(_messageConverter);
+            }
+            using (var sr = new StreamReader(stream))
+            using (var jr = new JsonTextReader(sr)) {
+                return (IMessage)_messageSerializer.Deserialize(jr);
+            }
+        }
     }
 
     /// <summary>
@@ -172,34 +204,43 @@ namespace DataSpreads.SignalW {
         }
     }
 
-    internal class MessageConverter : JsonCreationConverter<IMessage> {
+    public class MessageConverter : JsonCreationConverter<IMessage> {
+#if NET451
         // TODO reflection to cache types by names and use activator create instance
         // http://mattgabriel.co.uk/2016/02/10/object-creation-using-lambda-expression/
-        //static MessageConverter()
-        //{
-        //    var types = AppDomain.CurrentDomain
-        //            .GetAssemblies()
-        //            .Except(typeof(DataContext).Assembly.ItemAsList())
-        //            //.Where(a => !a.CodeBase.Contains("mscorlib.dll"))
-        //            .SelectMany(s => {
-        //                try {
-        //                    return s.GetTypes();
-        //                } catch {
-        //                    return new Type[] { };
-        //                }
-        //            })
-        //            .Where(p => {
-        //                try {
-        //                    return typeof(IData).IsAssignableFrom(p)
-        //                           && !typeof(IDistributedDataObject).IsAssignableFrom(p)
-        //                           && p.IsClass && !p.IsAbstract;
-        //                } catch {
-        //                    return false;
-        //                }
-        //            }).ToList();
-        //}
-        public MessageConverter() {
+        static MessageConverter() {
+            var assemblied = AppDomain.CurrentDomain
+                .GetAssemblies();
+            var types = assemblied
+                    .SelectMany(s => {
+                        try {
+                            return s.GetTypes();
+                        } catch {
+                            return new Type[] { };
+                        }
+                    })
+                    .Where(p => {
+                        try {
+                            return typeof(IMessage).IsAssignableFrom(p)
+                                   && p.GetTypeInfo().GetCustomAttribute<MessageTypeAttribute>() != null
+                                   && p.GetTypeInfo().IsClass && !p.GetTypeInfo().IsAbstract;
+                        } catch {
+                            return false;
+                        }
+                    }).ToList();
+            foreach (var t in types) {
+                var attr = t.GetTypeInfo().GetCustomAttribute<MessageTypeAttribute>();
+                KnownTypes[attr.Type] = t;
+            }
         }
+#endif
+
+        private static readonly ConcurrentDictionary<string, Type> KnownTypes = new ConcurrentDictionary<string, Type>();
+
+        public static void RegisterType<T>(string type) where T : IMessage {
+            KnownTypes[type] = typeof(T);
+        }
+
         // we learn object type from correlation id and a type stored in responses dictionary
         // ReSharper disable once RedundantAssignment
         protected override IMessage Create(Type objectType, JObject jObject) {
@@ -209,10 +250,17 @@ namespace DataSpreads.SignalW {
                 switch (type) {
                     case "ping":
                         return new PingMessage();
+
                     case "pong":
                         return new PongMessage();
+
                     default:
-                        throw new ArgumentOutOfRangeException();
+                        Type t;
+                        if (KnownTypes.TryGetValue(type, out t)) {
+                            var instance = Activator.CreateInstance(t);
+                            return (IMessage)instance;
+                        }
+                        throw new InvalidOperationException("Unknown message type");
                 }
             }
             throw new ArgumentException("Bad message format: no type field");
@@ -223,7 +271,7 @@ namespace DataSpreads.SignalW {
         }
     }
 
-    internal abstract class JsonCreationConverter<T> : JsonConverter {
+    public abstract class JsonCreationConverter<T> : JsonConverter {
 
         /// <summary>
         /// Create an instance of objectType, based properties in the JSON object
@@ -261,5 +309,4 @@ namespace DataSpreads.SignalW {
             throw new InvalidOperationException();
         }
     }
-
 }
