@@ -120,14 +120,24 @@ public class Chat : Hub {
 Then add SignalW to the OWIN pipeline and map hubs to a path. Here we use SignalR together 
 with MVC on the "/api" path:
 ```
-app.Map("/api/signalw", signalw => {
-    signalw.UseSpreadsDB((config) => {
-        config.MapHub<Chat>("chat", Format.Text);
-    });
-});
-app.Map("/api", apiApp => {
-    apiApp.UseMvc();
-});
+public void ConfigureServices(IServiceCollection services) {
+	...
+	services.AddSignalW();
+	...
+}
+
+public void Configure(IApplicationBuilder app, ...){
+	...
+	app.Map("/api/signalw", signalw => {
+		signalw.UseSignalW((config) => {
+			config.MapHub<Chat>("chat", Format.Text);
+		});
+	});
+	app.Map("/api", apiApp => {
+		apiApp.UseMvc();
+	});
+	...
+}
 ```
 
 Open several pages of [https://www.websocket.org/echo.html](https://www.websocket.org/echo.html)

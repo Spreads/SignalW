@@ -9,6 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		CONTRIBUTING.md = CONTRIBUTING.md
 		global.json = global.json
+		LICENSE.txt = LICENSE.txt
 		NuGet.config = NuGet.config
 		README.md = README.md
 	EndProjectSection
@@ -23,7 +24,7 @@ Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "ClientSample", "samples\Cli
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "WebSocketSample", "samples\WebSocketSample\WebSocketSample.xproj", "{EE790D50-C632-46B9-A430-06FA2F2FDCD7}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "SignalW", "src\DataSpreads.SignalW\SignalW.xproj", "{42E76F87-92B6-45AB-BF07-6B811C0F2CAC}"
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "SignalW", "src\SignalW\SignalW.xproj", "{42E76F87-92B6-45AB-BF07-6B811C0F2CAC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
