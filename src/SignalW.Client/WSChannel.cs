@@ -61,7 +61,7 @@ namespace DataSpreads.SignalW {
         }
 
         public override async Task<MemoryStream> ReadAsync(CancellationToken cancellationToken = new CancellationToken()) {
-            byte[] buffer = ArrayPool<byte>.Shared.Rent(4096);
+            byte[] buffer = ArrayPool<byte>.Shared.Rent(4096 * 2);
             var ms = RecyclableMemoryStreamManager.Instance.GetStream();
             WebSocketReceiveResult result;
             try {
@@ -95,7 +95,7 @@ namespace DataSpreads.SignalW {
                 ms.Dispose();
                 ms = null;
             } finally {
-                ArrayPool<byte>.Shared.Return(buffer, true);
+                ArrayPool<byte>.Shared.Return(buffer, false);
             }
             return ms;
         }

@@ -1,7 +1,7 @@
 SignalW
 ========
 
-Even simpler real-time web for ASP.NET Core.
+Even simpler and faster real-time web for ASP.NET Core.
 
 SignalW is a simplified version of [SignalR](https://github.com/aspnet/SignalR), with only WebSockets as a transport 
 and `MemoryStream` as a message type.
