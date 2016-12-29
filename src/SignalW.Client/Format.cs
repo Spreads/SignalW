@@ -1,4 +1,4 @@
-namespace DataSpreads.SignalW.Connections
+namespace DataSpreads.SignalW
 {
     public enum Format {
         Text,

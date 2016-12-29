@@ -26,9 +26,10 @@ a correct handler.
 ```
 public class DispatchHub : Hub {
     public override async Task OnReceiveAsync(MemoryStream payload) {
-        object message = payload.Deserialize<IMessage>();
-		// dispose as soon as it is no longer used becasue it uses pooled buffers inside
-		payload.Dispose(); 
+        // Extension method ReadJsonMessage returns IMessage object instance based on the `type` field in JSON
+		object message = payload.ReadJsonMessage();
+        // dispose as soon as it is no longer used becasue it uses pooled buffers inside
+        payload.Dispose();
 
         // dynamic will dispatch to the correct method
         dynamic dynMessage = message;
@@ -36,11 +37,13 @@ public class DispatchHub : Hub {
     }
 
     public async void OnReceiveAsync(MessageFoo message) {
-        await Clients.Group("foo").InvokeAsync(message.Serialize());
+		var stream = message.WriteJson();
+        await Clients.Group("foo").InvokeAsync(stream);
     }
 
     public async void OnReceiveAsync(MessageBar message) {
-        await Clients.Group("bar").InvokeAsync(message.Serialize());
+		var stream = message.WriteJson();
+        await Clients.Group("bar").InvokeAsync(stream);
     }
 }
 ```

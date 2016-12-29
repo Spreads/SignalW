@@ -1,12 +1,12 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
+using System.Linq;
 using System.Collections.Concurrent;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization.Formatters;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
 
 namespace DataSpreads.SignalW {
 
@@ -79,10 +79,12 @@ namespace DataSpreads.SignalW {
             return message;
         }
 
-        public static void WriteJson<T>(this MemoryStream stream, T value) {
+        public static MemoryStream WriteJson<T>(this T value) {
+            var stream = RecyclableMemoryStreamManager.Instance.GetStream();
             using (var sw = new StreamWriter(stream)) {
                 _serializer.Serialize(sw, value);
             }
+            return stream;
         }
 
         public static T ReadJson<T>(this MemoryStream stream) {

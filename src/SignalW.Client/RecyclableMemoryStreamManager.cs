@@ -42,6 +42,9 @@ namespace DataSpreads.SignalW {
     /// usage. There should be far fewer 8 MB buffers than 1 MB buffers, for example.
     /// </remarks>
     public partial class RecyclableMemoryStreamManager {
+        public static RecyclableMemoryStreamManager Instance = new RecyclableMemoryStreamManager();
+
+
         /// <summary>
         /// Generic delegate for handling events without any arguments.
         /// </summary>

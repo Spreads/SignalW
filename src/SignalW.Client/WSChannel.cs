@@ -5,7 +5,7 @@ using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace DataSpreads.SignalW.Connections {
+namespace DataSpreads.SignalW {
 
     public abstract class Channel {
 
@@ -19,7 +19,6 @@ namespace DataSpreads.SignalW.Connections {
     }
 
     public class WsChannel : Channel {
-        private static RecyclableMemoryStreamManager MemoryStreams = new RecyclableMemoryStreamManager();
 
         private readonly WebSocket _ws;
         private readonly Format _format;
@@ -49,7 +48,10 @@ namespace DataSpreads.SignalW.Connections {
                 }
                 return;
             }
-            throw new NotImplementedException();
+            rms = RecyclableMemoryStreamManager.Instance.GetStream() as RecyclableMemoryStream;
+            item.CopyTo(rms);
+            // will recurse only once
+            await WriteAsync(rms, cancellationToken);
         }
 
         public override bool TryComplete() {
@@ -60,7 +62,7 @@ namespace DataSpreads.SignalW.Connections {
 
         public override async Task<MemoryStream> ReadAsync(CancellationToken cancellationToken = new CancellationToken()) {
             byte[] buffer = ArrayPool<byte>.Shared.Rent(4096);
-            var ms = MemoryStreams.GetStream();
+            var ms = RecyclableMemoryStreamManager.Instance.GetStream();
             WebSocketReceiveResult result;
             try {
 
