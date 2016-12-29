@@ -24,7 +24,7 @@ namespace DataSpreads.SignalW {
         private readonly Format _format;
         private TaskCompletionSource<bool> _tcs;
         private CancellationTokenSource _cts;
-        
+
         public WsChannel(WebSocket ws, Format format) {
             _ws = ws;
             _format = format;
@@ -36,8 +36,7 @@ namespace DataSpreads.SignalW {
             var rms = item as RecyclableMemoryStream;
             if (rms != null) {
                 try {
-                    foreach (var chunk in rms.Chunks)
-                    {
+                    foreach (var chunk in rms.Chunks) {
                         var type = _format == Format.Binary ? WebSocketMessageType.Binary : WebSocketMessageType.Text;
                         await _ws.SendAsync(chunk, type, true, _cts.Token);
                     }
@@ -61,15 +60,27 @@ namespace DataSpreads.SignalW {
         }
 
         public override async Task<MemoryStream> ReadAsync(CancellationToken cancellationToken = new CancellationToken()) {
-            byte[] buffer = ArrayPool<byte>.Shared.Rent(4096 * 2);
-            var ms = RecyclableMemoryStreamManager.Instance.GetStream();
+            var blockSize = RecyclableMemoryStreamManager.Instance.BlockSize;
+            byte[] buffer = null;
+            bool moreThanOneBlock = false;
+            // this will create the first chunk with default size
+            var ms = (RecyclableMemoryStream)RecyclableMemoryStreamManager.Instance.GetStream("WSChannel.ReadAsync", blockSize);
             WebSocketReceiveResult result;
             try {
-
+                buffer = ms.blocks[0];
                 result = await _ws.ReceiveAsync(new ArraySegment<byte>(buffer), _cts.Token);
                 while (!result.CloseStatus.HasValue && !_cts.IsCancellationRequested) {
-                    ms.Write(buffer, 0, result.Count);
+                    // we write to the first block directly, to save one copy operation for 
+                    // small messages (< blockSize), which should be the majorority of cases
+                    if (!moreThanOneBlock) {
+                        ms.length = result.Count;
+                        ms.Position = result.Count;
+                    } else {
+                        ms.Write(buffer, 0, result.Count);
+                    }
                     if (!result.EndOfMessage) {
+                        moreThanOneBlock = true;
+                        buffer = ArrayPool<byte>.Shared.Rent(blockSize);
                         result = await _ws.ReceiveAsync(new ArraySegment<byte>(buffer), _cts.Token);
                     } else {
                         break;
@@ -95,7 +106,9 @@ namespace DataSpreads.SignalW {
                 ms.Dispose();
                 ms = null;
             } finally {
-                ArrayPool<byte>.Shared.Return(buffer, false);
+                if (moreThanOneBlock) {
+                    ArrayPool<byte>.Shared.Return(buffer, false);
+                }
             }
             return ms;
         }

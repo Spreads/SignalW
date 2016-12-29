@@ -42,7 +42,7 @@ namespace DataSpreads.SignalW {
     /// usage. There should be far fewer 8 MB buffers than 1 MB buffers, for example.
     /// </remarks>
     public partial class RecyclableMemoryStreamManager {
-        public static RecyclableMemoryStreamManager Instance = new RecyclableMemoryStreamManager();
+        public static RecyclableMemoryStreamManager Instance = new RecyclableMemoryStreamManager(8 * 1024, DefaultLargeBufferMultiple, DefaultMaximumBufferSize);
 
 
         /// <summary>

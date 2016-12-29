@@ -65,7 +65,7 @@ namespace DataSpreads.SignalW {
         /// <summary>
         /// All of these blocks must be the same size
         /// </summary>
-        private readonly List<byte[]> blocks = new List<byte[]>(1);
+        internal readonly List<byte[]> blocks = new List<byte[]>(1);
 
         /// <summary>
         /// This is only set by GetBuffer() if the necessary buffer is larger than a single block size, or on
@@ -307,7 +307,7 @@ namespace DataSpreads.SignalW {
             }
         }
 
-        private int length;
+        internal int length;
 
         /// <summary>
         /// Gets the number of bytes written to this stream.
