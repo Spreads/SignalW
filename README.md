@@ -13,7 +13,8 @@ that pools internal buffers.
 * Serialization is out of scope. It is always a pain to abstract it for a general case, but in 
 every concrete case it could be as simple as using JSON.NET (with extension methods for streams)
 or as flexible as a custom binary encoding.
-* Any generic WebSocket client should work.
+* Any generic WebSocket client should work. The SignalW.Client project has a WsChannel calss that wraps
+around the standard WebSocket class and gives methods to work with MemoryStreams instead of ArraySegments.
 
 Instead of multiple methods inside Hubs that clients invoked by name, in SignalW we have a single method 
 `async Task OnReceiveAsync(MemoryStream payload)`. If one uses Angular2 with `@ngrx/store` then
@@ -72,7 +73,7 @@ use protocol parameters for this. Here we are using RxJS WebSocketSubject:
 import { WebSocketSubjectConfig, WebSocketSubject } from 'rxjs/observable/dom/WebSocketSubject';
 ...
 let wsConfig: WebSocketSubjectConfig = {
-    url: 'wss://localhost.dataspreads.com:5001/websockets/',
+    url: 'wss://example.com/api/signalw/chat',
     protocol: [
     'access_token',
     token

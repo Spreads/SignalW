@@ -1,5 +1,5 @@
 ﻿{
-	"version": "0.6.0-alpha4",
+	"version": "0.6.0-alpha6",
 	"description": "Even simpler real-time web for ASP.NET Core",
 
 	"packOptions": {
@@ -25,7 +25,8 @@
 	},
 
 	"dependencies": {
-		"Newtonsoft.Json": "9.0.1"
+		"Newtonsoft.Json": "9.0.1",
+		"System.Buffers": "4.3.0"
 	},
 
 	"frameworks": {
@@ -33,8 +34,13 @@
 			"dependencies": { "Microsoft.AspNetCore.WebSockets": "1.0.0" },
 		},
 		"net451": {
-			"dependencies": { "System.Buffers": "4.0.0" },
-			"frameworkAssemblies": { "System.Runtime": "4.0.10.0" }
+			"dependencies": {
+				"System.Runtime": {
+					"type": "build",
+					"version": "4.1.0"
+				}
+			},
+
 		}
 	}
 }
