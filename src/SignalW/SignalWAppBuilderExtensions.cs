@@ -12,7 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace DataSpreads.SignalW {
     public static class SignalWAppBuilderExtensions {
         public static IApplicationBuilder UseSignalW(this IApplicationBuilder app, Action<HubRouteBuilder> configure) {
-            app.UseWebSockets(new WebSocketOptions { });
+            app.UseWebSockets(new WebSocketOptions());
             configure(new HubRouteBuilder(app));
             return app;
         }
@@ -33,7 +33,10 @@ namespace DataSpreads.SignalW {
                     //var email = identity.IsAuthenticated ? identity.Claims.First(c => c.Type == ClaimTypes.Email).Value : "no email";
                     if (context.WebSockets.IsWebSocketRequest) {
                         var webSocket = await context.WebSockets.AcceptWebSocketAsync();
-                        var connectionId = (string)context.Request.Query["connectionId"];
+                        var connectionId =
+                            context.Request.Query.ContainsKey("connectionId")
+                            ? (string)context.Request.Query["connectionId"]
+                            : Guid.NewGuid().ToString();
                         var channel = new WsChannel(webSocket, format);
 
                         var connection = new Connection {
