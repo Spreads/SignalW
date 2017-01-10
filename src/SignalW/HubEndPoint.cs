@@ -1,11 +1,11 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using System;
-using System.Threading.Tasks;
 using DataSpreads.SignalW.Connections;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Threading.Tasks;
 
 namespace DataSpreads.SignalW {
 
@@ -38,6 +38,7 @@ namespace DataSpreads.SignalW {
         public async Task OnConnectedAsync(Connection connection) {
             // TODO: Dispatch from the caller
             await Task.Yield();
+            Exception exception = null;
             var created = false;
             try {
                 await _lifetimeManager.OnConnectedAsync(connection);
@@ -47,8 +48,17 @@ namespace DataSpreads.SignalW {
                 await _hub.OnConnectedAsync();
 
                 await DispatchMessagesAsync(connection);
+            } catch (Exception ex) {
+                _logger.LogError(0, ex, "Error when processing requests.");
+                exception = ex;
+                connection.Channel.TryComplete();
             } finally {
-                await _hub.OnDisconnectedAsync();
+                if (connection.Channel.Completion.Status == TaskStatus.RanToCompletion
+                    && connection.Channel.Completion.Result != null) {
+                    exception = connection.Channel.Completion.Result;
+                }
+
+                await _hub.OnDisconnectedAsync(exception);
 
                 if (created) {
                     _hub.Dispose();

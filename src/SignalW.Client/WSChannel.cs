@@ -15,13 +15,13 @@ namespace DataSpreads.SignalW {
 
         public abstract Task<MemoryStream> ReadAsync();
 
-        public abstract Task Completion { get; }
+        public abstract Task<Exception> Completion { get; }
     }
 
     public class WsChannel : Channel {
         private readonly WebSocket _ws;
         private readonly Format _format;
-        private TaskCompletionSource<bool> _tcs;
+        private TaskCompletionSource<Exception> _tcs;
         private CancellationTokenSource _cts;
         private SemaphoreSlim _readSemaphore = new SemaphoreSlim(1, 1);
         private SemaphoreSlim _writeSemaphore = new SemaphoreSlim(1, 1);
@@ -29,7 +29,7 @@ namespace DataSpreads.SignalW {
         public WsChannel(WebSocket ws, Format format) {
             _ws = ws;
             _format = format;
-            _tcs = new TaskCompletionSource<bool>();
+            _tcs = new TaskCompletionSource<Exception>();
             _cts = new CancellationTokenSource();
         }
 
@@ -52,13 +52,18 @@ namespace DataSpreads.SignalW {
                             await _ws.SendAsync(chunk, type, true, _cts.Token);
                         }
                         return true;
-                    } catch {
+                    } catch (Exception ex) {
                         if (!_cts.IsCancellationRequested) {
                             // cancel readers and other writers waiting on the semaphore
                             _cts.Cancel();
+                            _tcs.TrySetResult(ex);
+                        } else {
+                            await
+                                _ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "NormalClosure",
+                                    CancellationToken.None);
+                            _tcs.TrySetResult(null);
                         }
-                        await _ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "NormalClosure", CancellationToken.None);
-                        _tcs.TrySetResult(true);
+                        // Write not finished, Completion indicates why (null - cancelled)
                         return false;
                     }
                 }
@@ -74,6 +79,8 @@ namespace DataSpreads.SignalW {
         public override bool TryComplete() {
             if (_cts.IsCancellationRequested) return false;
             _cts.Cancel();
+            _writeSemaphore.Wait();
+            _readSemaphore.Wait();
             return true;
         }
 
@@ -107,20 +114,23 @@ namespace DataSpreads.SignalW {
                 }
                 if (result.CloseStatus.HasValue) {
                     _cts.Cancel();
-                    await _ws.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
-                    _tcs.TrySetResult(true);
+                    // TODO remove the line, the socket is already closed
+                    //await _ws.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
+                    _tcs.TrySetResult(null);
                     ms.Dispose();
                     ms = null;
                 } else if (_cts.IsCancellationRequested) {
                     await _ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "NormalClosure", CancellationToken.None);
-                    _tcs.TrySetResult(true);
+                    _tcs.TrySetResult(null);
                     ms.Dispose();
                     ms = null;
                 }
-            } catch {
+            } catch (Exception ex) {
                 if (_cts.IsCancellationRequested) {
                     await _ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "NormalClosure", CancellationToken.None);
-                    _tcs.TrySetResult(true);
+                    _tcs.TrySetResult(null);
+                } else {
+                    _tcs.TrySetResult(ex);
                 }
                 ms.Dispose();
                 ms = null;
@@ -133,6 +143,6 @@ namespace DataSpreads.SignalW {
             return ms;
         }
 
-        public override Task Completion => _tcs.Task;
+        public override Task<Exception> Completion => _tcs.Task;
     }
 }
