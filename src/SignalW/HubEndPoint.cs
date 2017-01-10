@@ -24,6 +24,7 @@ namespace DataSpreads.SignalW {
         private readonly ILogger<HubEndPoint<THub, TClient>> _logger;
         private THub _hub;
         private readonly IServiceScope _scope;
+        private IHubActivator<THub, TClient> _hubActivator;
 
         public HubEndPoint(HubLifetimeManager<THub> lifetimeManager,
                            IHubContext<THub, TClient> hubContext,
@@ -33,18 +34,18 @@ namespace DataSpreads.SignalW {
             _hubContext = hubContext;
             _logger = logger;
             _scope = serviceScopeFactory.CreateScope();
+            _hubActivator = _scope.ServiceProvider.GetRequiredService<IHubActivator<THub, TClient>>();
+            _hub = _hubActivator.Create();
         }
 
         public async Task OnConnectedAsync(Connection connection) {
             // TODO: Dispatch from the caller
             await Task.Yield();
             Exception exception = null;
-            var created = false;
             try {
                 await _lifetimeManager.OnConnectedAsync(connection);
 
-                _hub = CreateHub(_scope.ServiceProvider, connection, out created);
-
+                InitializeHub(_hub, connection);
                 await _hub.OnConnectedAsync();
 
                 await DispatchMessagesAsync(connection);
@@ -58,10 +59,10 @@ namespace DataSpreads.SignalW {
                     exception = connection.Channel.Completion.Result;
                 }
 
-                await _hub.OnDisconnectedAsync(exception);
-
-                if (created) {
-                    _hub.Dispose();
+                try {
+                    await _hub.OnDisconnectedAsync(exception);
+                } finally {
+                    _hubActivator.Release(_hub);
                     _scope.Dispose();
                 }
 
@@ -83,24 +84,15 @@ namespace DataSpreads.SignalW {
                 }
 
                 await _hub.OnReceiveAsync(payload);
+
                 payload.Dispose();
             }
         }
 
-        private THub CreateHub(IServiceProvider provider, Connection connection, out bool created) {
-            var hub = provider.GetService<THub>();
-            created = false;
-
-            if (hub == null) {
-                hub = ActivatorUtilities.CreateInstance<THub>(provider);
-                created = true;
-            }
-
+        private void InitializeHub(THub hub, Connection connection) {
             hub.Clients = _hubContext.Clients;
             hub.Context = new HubCallerContext(connection);
             hub.Groups = new GroupManager<THub>(connection, _lifetimeManager);
-
-            return hub;
         }
     }
 }

@@ -1,5 +1,5 @@
 {
-	"version": "0.6.0-alpha8",
+	"version": "0.6.1-alpha01",
 	"description": "Even simpler real-time web for ASP.NET Core",
 
 	"packOptions": {
@@ -29,7 +29,7 @@
 		"Microsoft.Extensions.Logging": "1.0.0",
 		"Microsoft.AspNetCore.WebSockets": "1.0.0",
 		"Microsoft.AspNetCore.Routing": "1.1.0-*",
-		"SignalW.Client": "0.6.0-*"
+		"SignalW.Client": "0.6.1-*"
 	},
 
 	"frameworks": {
