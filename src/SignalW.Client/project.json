@@ -1,5 +1,5 @@
 ﻿{
-	"version": "0.6.1-alpha01",
+	"version": "0.7.0-*",
 	"description": "Even simpler real-time web for ASP.NET Core",
 
 	"packOptions": {

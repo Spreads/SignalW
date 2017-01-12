@@ -1,5 +1,5 @@
 {
-	"version": "0.6.1-alpha01",
+	"version": "0.7.0-*",
 	"description": "Even simpler real-time web for ASP.NET Core",
 
 	"packOptions": {
@@ -13,7 +13,7 @@
 		"owners": [ "Victor Baybekov" ],
 		"summary": "Even simpler real-time web for ASP.NET Core",
 		"projectUrl": "https://github.com/buybackoff/SignalW",
-		
+
 	},
 	"buildOptions": {
 		"warningsAsErrors": false,
@@ -29,7 +29,7 @@
 		"Microsoft.Extensions.Logging": "1.0.0",
 		"Microsoft.AspNetCore.WebSockets": "1.0.0",
 		"Microsoft.AspNetCore.Routing": "1.1.0-*",
-		"SignalW.Client": "0.6.1-*"
+		"SignalW.Client": "0.*"
 	},
 
 	"frameworks": {
