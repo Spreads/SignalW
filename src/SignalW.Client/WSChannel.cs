@@ -4,6 +4,7 @@ using System.IO;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Spreads.Buffers;
 
 namespace DataSpreads.SignalW {
 
@@ -67,7 +68,7 @@ namespace DataSpreads.SignalW {
                         return false;
                     }
                 }
-                rms = RecyclableMemoryStreamManager.Instance.GetStream() as RecyclableMemoryStream;
+                rms = RecyclableMemoryStreamManager.Default.GetStream() as RecyclableMemoryStream;
                 item.CopyTo(rms);
                 // will recurse only once
                 return await WriteAsync(rms);
@@ -85,28 +86,29 @@ namespace DataSpreads.SignalW {
         }
 
         public override async Task<MemoryStream> ReadAsync() {
-            var blockSize = RecyclableMemoryStreamManager.Instance.BlockSize;
+            var blockSize = RecyclableMemoryStreamManager.Default.BlockSize;
             byte[] buffer = null;
-            bool moreThanOneBlock = false;
+            bool moreThanOneBlock = true; // TODO first block optimization
             // this will create the first chunk with default size
-            var ms = (RecyclableMemoryStream)RecyclableMemoryStreamManager.Instance.GetStream("WSChannel.ReadAsync", blockSize);
+            var ms = (RecyclableMemoryStream)RecyclableMemoryStreamManager.Default.GetStream("WSChannel.ReadAsync", blockSize);
             WebSocketReceiveResult result;
             await _readSemaphore.WaitAsync(_cts.Token);
             try {
-                buffer = ms.blocks[0];
+                // TODO first block optimization
+                buffer = ArrayPool<byte>.Shared.Rent(blockSize); //ms.blocks[0];
                 result = await _ws.ReceiveAsync(new ArraySegment<byte>(buffer), _cts.Token);
                 while (!result.CloseStatus.HasValue && !_cts.IsCancellationRequested) {
                     // we write to the first block directly, to save one copy operation for
                     // small messages (< blockSize), which should be the majorority of cases
                     if (!moreThanOneBlock) {
-                        ms.length = result.Count;
-                        ms.Position = result.Count;
+                        //ms.length = result.Count;
+                        //ms.Position = result.Count;
                     } else {
                         ms.Write(buffer, 0, result.Count);
                     }
                     if (!result.EndOfMessage) {
-                        moreThanOneBlock = true;
-                        buffer = ArrayPool<byte>.Shared.Rent(blockSize);
+                        //moreThanOneBlock = true;
+                        //buffer = ArrayPool<byte>.Shared.Rent(blockSize);
                         result = await _ws.ReceiveAsync(new ArraySegment<byte>(buffer), _cts.Token);
                     } else {
                         break;

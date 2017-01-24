@@ -25,8 +25,7 @@
 	},
 
 	"dependencies": {
-		"Newtonsoft.Json": "9.0.1",
-		"System.Buffers": "4.3.0"
+		"Spreads.Core" : "0.7.0-*"
 	},
 
 	"frameworks": {
