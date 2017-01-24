@@ -1,12 +1,12 @@
-﻿using System;
-using System.Linq;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Reflection;
 using System.Runtime.Serialization.Formatters;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Linq;
+using System.Text;
 
 namespace DataSpreads.SignalW {
 
@@ -81,25 +81,27 @@ namespace DataSpreads.SignalW {
 
         public static MemoryStream WriteJson<T>(this T value) {
             var stream = RecyclableMemoryStreamManager.Instance.GetStream();
-            using (var sw = new StreamWriter(stream)) {
+            using (var sw = new StreamWriter(stream, Encoding.UTF8, 8192, true)) {
                 _serializer.Serialize(sw, value);
             }
             return stream;
         }
 
         public static T ReadJson<T>(this MemoryStream stream) {
-            using (var sr = new StreamReader(stream)) {
+            stream.Position = 0;
+            using (var sr = new StreamReader(stream, Encoding.UTF8, true, 8192, true)) {
                 return (T)_serializer.Deserialize(sr, typeof(T));
             }
         }
 
         public static IMessage ReadJsonMessage(this MemoryStream stream) {
+            stream.Position = 0;
             if (_messageSerializer == null) {
                 _messageSerializer = new JsonSerializer();
                 _messageConverter = new MessageConverter();
                 _messageSerializer.Converters.Add(_messageConverter);
             }
-            using (var sr = new StreamReader(stream))
+            using (var sr = new StreamReader(stream, Encoding.UTF8, true, 8192, true))
             using (var jr = new JsonTextReader(sr)) {
                 return (IMessage)_messageSerializer.Deserialize(jr);
             }
@@ -207,8 +209,8 @@ namespace DataSpreads.SignalW {
     }
 
     public class MessageConverter : JsonCreationConverter<IMessage> {
-#if NET451
-        // TODO reflection to cache types by names and use activator create instance
+#if NET451x
+        // TODO(?,low) reflection to cache types by names and use activator create instance
         // http://mattgabriel.co.uk/2016/02/10/object-creation-using-lambda-expression/
         static MessageConverter() {
             var assemblied = AppDomain.CurrentDomain
@@ -240,7 +242,9 @@ namespace DataSpreads.SignalW {
         private static readonly ConcurrentDictionary<string, Type> KnownTypes = new ConcurrentDictionary<string, Type>();
 
         public static void RegisterType<T>(string type) where T : IMessage {
-            KnownTypes[type] = typeof(T);
+            if (!KnownTypes.TryAdd(type, typeof(T))) {
+                throw new ArgumentException($"Type {type} already registered");
+            }
         }
 
         // we learn object type from correlation id and a type stored in responses dictionary
