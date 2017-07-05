@@ -3,8 +3,9 @@
 
 using System;
 using System.Collections.Concurrent;
+using Spreads.SignalW.Client;
 
-namespace DataSpreads.SignalW.Connections {
+namespace Spreads.SignalW.Connections {
 
     public class ConnectionMetadata {
         private ConcurrentDictionary<object, object> _metadata = new ConcurrentDictionary<object, object>();

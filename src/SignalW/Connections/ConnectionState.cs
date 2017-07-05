@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DataSpreads.SignalW.Connections
+namespace Spreads.SignalW.Connections
 {
     public class ConnectionState {
         public Connection Connection { get; set; }

@@ -4,7 +4,7 @@
 using System.IO;
 using System.Threading.Tasks;
 
-namespace DataSpreads.SignalW
+namespace Spreads.SignalW
 {
     public interface IClientProxy
     {

@@ -5,9 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using DataSpreads.SignalW.Connections;
+using Spreads.SignalW.Connections;
 
-namespace DataSpreads.SignalW {
+namespace Spreads.SignalW {
 
     public class DefaultHubLifetimeManager<THub> : HubLifetimeManager<THub> {
         private readonly ConnectionList _connections = new ConnectionList();

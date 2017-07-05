@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
+using Spreads.SignalW.Client;
 
-namespace DataSpreads.SignalW.Connections
+namespace Spreads.SignalW.Connections
 {
 
     public class Connection {

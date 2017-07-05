@@ -3,7 +3,7 @@
 
 using Microsoft.Extensions.DependencyInjection;
 
-namespace DataSpreads.SignalW {
+namespace Spreads.SignalW {
 
     public static class SignalWDependencyInjectionExtensions {
 

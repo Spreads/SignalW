@@ -1,11 +1,11 @@
 ﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace DataSpreads.SignalW {
+namespace Spreads.SignalW {
 
     public class DefaultHubActivator<THub, TClient> : IHubActivator<THub, TClient>
         where THub : Hub<TClient> {

@@ -3,13 +3,14 @@
 
 using System;
 using System.Threading.Tasks;
-using DataSpreads.SignalW.Connections;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Spreads.SignalW.Client;
+using Spreads.SignalW.Connections;
 
-namespace DataSpreads.SignalW {
+namespace Spreads.SignalW {
     public static class SignalWAppBuilderExtensions {
         public static IApplicationBuilder UseSignalW(this IApplicationBuilder app, Action<HubRouteBuilder> configure) {
             app.UseWebSockets(new WebSocketOptions());

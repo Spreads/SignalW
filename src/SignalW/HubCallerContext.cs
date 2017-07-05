@@ -2,9 +2,9 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System.Security.Claims;
-using DataSpreads.SignalW.Connections;
+using Spreads.SignalW.Connections;
 
-namespace DataSpreads.SignalW
+namespace Spreads.SignalW
 {
     public class HubCallerContext
     {

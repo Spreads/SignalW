@@ -1,8 +1,8 @@
-﻿using Spreads.Serialization;
-using System.IO;
+﻿using System.IO;
 using System.Threading.Tasks;
+using Spreads.Serialization;
 
-namespace DataSpreads.SignalW
+namespace Spreads.SignalW
 {
     public class MessageHub : Hub
     {

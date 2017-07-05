@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
+using Spreads.SignalW.Client;
 
-namespace DataSpreads.SignalW.Connections
+namespace Spreads.SignalW.Connections
 {
     public class ConnectionManager {
         private ConcurrentDictionary<string, ConnectionState> _connections = new ConcurrentDictionary<string, ConnectionState>();

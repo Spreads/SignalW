@@ -5,7 +5,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 
-namespace DataSpreads.SignalW.Connections {
+namespace Spreads.SignalW.Connections {
     public class ConnectionList : IReadOnlyCollection<Connection> {
         private readonly ConcurrentDictionary<string, Connection> _connections = new ConcurrentDictionary<string, Connection>();
 

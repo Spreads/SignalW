@@ -4,9 +4,9 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using DataSpreads.SignalW.Connections;
+using Spreads.SignalW.Client;
 
-namespace DataSpreads.SignalW {
+namespace Spreads.SignalW {
 
     public class Hub : Hub<IClientProxy> {
     }

@@ -2,6 +2,8 @@
     <Import Project="..\..\build\common.props" />
   <PropertyGroup>
     <TargetFrameworks>net451;netstandard1.6</TargetFrameworks>
+    <AssemblyName>Spreads.SignalW.Client</AssemblyName>
+    <RootNamespace>Spreads.SignalW.Client</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

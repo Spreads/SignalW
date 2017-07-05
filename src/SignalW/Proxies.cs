@@ -3,9 +3,9 @@
 
 using System.IO;
 using System.Threading.Tasks;
-using DataSpreads.SignalW.Connections;
+using Spreads.SignalW.Connections;
 
-namespace DataSpreads.SignalW {
+namespace Spreads.SignalW {
 
     public class UserProxy<THub> : IClientProxy {
         private readonly string _userId;

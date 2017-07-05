@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Spreads.Buffers;
 
-namespace DataSpreads.SignalW {
+namespace Spreads.SignalW.Client {
 
     public abstract class Channel {
 
@@ -24,8 +24,8 @@ namespace DataSpreads.SignalW {
         private readonly Format _format;
         private TaskCompletionSource<Exception> _tcs;
         private CancellationTokenSource _cts;
-        private SemaphoreSlim _readSemaphore = new SemaphoreSlim(1, 1);
-        private SemaphoreSlim _writeSemaphore = new SemaphoreSlim(1, 1);
+        private readonly SemaphoreSlim _readSemaphore = new SemaphoreSlim(1, 1);
+        private readonly SemaphoreSlim _writeSemaphore = new SemaphoreSlim(1, 1);
 
         public WsChannel(WebSocket ws, Format format) {
             _ws = ws;
