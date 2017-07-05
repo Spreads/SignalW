@@ -1,23 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Spreads.Serialization;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
-using Spreads.Serialization;
 
-namespace DataSpreads.SignalW {
-    public class MessageHub : Hub {
-        public override async Task OnReceiveAsync(MemoryStream payload) {
-            object message = payload.ReadJson<IMessage>();
+namespace DataSpreads.SignalW
+{
+    public class MessageHub : Hub
+    {
+        public override async Task OnReceiveAsync(MemoryStream payload)
+        {
+            var message = BinarySerializer.Json.Deserialize<IMessage>(payload);
             // dispose as soon as it is no longer used becasue it uses pooled buffers inside
             payload.Dispose();
 
             // dynamic will dispatch to the correct method
-            dynamic dynMessage = message;
-            await OnReceiveAsync(dynMessage);
+            //dynamic dynMessage = message;
+            await OnReceiveAsync(message);
         }
 
-        public virtual async Task OnReceiveAsync(IMessage message) {
+        public virtual async Task OnReceiveAsync(IMessage message)
+        {
             return;
         }
     }

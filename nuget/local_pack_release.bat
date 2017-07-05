@@ -13,11 +13,11 @@ set "build=build%fullstamp%"
 echo build: "%build%"
 
 dotnet restore ..\src\SignalW.Client
-dotnet pack ..\src\SignalW.Client -c DEBUG -o C:\tools\LocalNuget --include-symbols --version-suffix "%build%"
+dotnet pack ..\src\SignalW.Client -c RELEASE -o C:\tools\LocalNuget --version-suffix "%build%"
 rmdir /s /q ..\src\SignalW.Client\obj
 
 dotnet restore ..\src\SignalW
-dotnet pack ..\src\SignalW -c DEBUG -o C:\tools\LocalNuget --include-symbols --version-suffix "%build%"
+dotnet pack ..\src\SignalW -c RELEASE -o C:\tools\LocalNuget --version-suffix "%build%"
 rmdir /s /q ..\src\SignalW\obj
 
 

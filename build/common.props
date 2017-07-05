@@ -1,0 +1,45 @@
+<Project>
+  <PropertyGroup>
+    <VersionPrefix>0.8.0</VersionPrefix>
+    <VersionSuffix>alpha</VersionSuffix>
+    <VersionSuffix Condition="'$(VersionSuffix)' != '' And '$(BuildNumber)' != ''">$(VersionSuffix)-$(BuildNumber)</VersionSuffix>
+    <PackageTags>Spreads SignalW</PackageTags>
+    <Product>SignalW</Product>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/Spreads/SignalW.git</RepositoryUrl>
+    <Authors>Victor Baybekov</Authors>
+    <Company />
+    <Product />
+    <Copyright>Victor Baybekov</Copyright>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn),1591</NoWarn>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
+  </PropertyGroup>
+  
+  <PropertyGroup>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net451|AnyCPU'">
+    <DefineConstants>TRACE;SPREADS;NO_VARIANCE;NET451;</DefineConstants>
+    <OutputPath>..\..\bin\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net451|AnyCPU'">
+    <DefineConstants>TRACE;DEBUG;SPREADS;NO_VARIANCE;NET451;</DefineConstants>
+    <OutputPath>..\..\bin\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard1.6|AnyCPU'">
+    <DefineConstants>TRACE;SPREADS;NO_VARIANCE;COREFX;</DefineConstants>
+    <OutputPath>..\..\bin\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard1.6|AnyCPU'">
+    <DefineConstants>TRACE;DEBUG;SPREADS;NO_VARIANCE;COREFX;</DefineConstants>
+    <OutputPath>..\..\bin\</OutputPath>
+  </PropertyGroup>
+</Project>
