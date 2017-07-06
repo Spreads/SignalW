@@ -13,13 +13,13 @@ that pools internal buffers.
 * Serialization is out of scope. It is always a pain to abstract it for a general case, but in 
 every concrete case it could be as simple as using JSON.NET (with extension methods for streams)
 or as flexible as a custom binary encoding.
-* Any generic WebSocket client should work. The SignalW.Client project has a WsChannel calss that wraps
+* Any generic WebSocket client should work. The SignalW.Client project has a WsChannel class that wraps
 around the standard WebSocket class and gives methods to work with MemoryStreams instead of ArraySegments.
 
 Instead of multiple methods inside Hubs that clients invoked by name, in SignalW we have a single method 
 `async Task OnReceiveAsync(MemoryStream payload)`. If one uses Angular2 with `@ngrx/store` then
 a deserialized-to-JSON message will always have a `type` field, and one could use a custom 
-[`JsonCreationConverter<IMessage>`](https://github.com/buybackoff/SignalW/blob/master/src/SignalW/Serialization.cs#L175)
+[`JsonCreationConverter<IMessage>`](https://github.com/Spreads/Spreads/blob/master/src/Spreads.Core/Serialization/IMessageJsonConverter.cs#L125)
 to deserialize a message to its correct .NET type. Then one could write multiple methods with the same 
 name that differ only by its parameter type and use `dynamic` keyword to dispatch a message to 
 a correct handler.
