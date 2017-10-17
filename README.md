@@ -69,7 +69,7 @@ client.Options.RequestHeaders.Add("Authorization", header.ToString());
 It is impossible to add headers to WebSocket constructor in JavaScript, but we could 
 use protocol parameters for this. Here we are using RxJS WebSocketSubject:
 
-```javascrypt
+```javascript
 import { WebSocketSubjectConfig, WebSocketSubject } from 'rxjs/observable/dom/WebSocketSubject';
 ...
 let wsConfig: WebSocketSubjectConfig = {
@@ -111,7 +111,8 @@ public class Chat : Hub {
         return Task.FromResult(0);
     }
 
-    public override Task OnDisconnectedAsync() {
+    public override Task OnDisconnectedAsync(Exception exception) {
+	
         return Task.FromResult(0);
     }
 

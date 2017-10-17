@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.6
+VisualStudioVersion = 15.0.26730.12
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SignalW", "src\SignalW\SignalW.csproj", "{66A308E3-9117-40B3-9F45-754B26BDE9F5}"
 EndProject
@@ -11,6 +11,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "project", "project", "{83B7
 	ProjectSection(SolutionItems) = preProject
 		build\common.props = build\common.props
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SiglanWServer", "SiglanWServer\SiglanWServer.csproj", "{790FFA46-E104-46C6-A693-93254AE4C7EA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,8 +28,15 @@ Global
 		{97303A08-2018-4864-B942-FC5379CC0741}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{97303A08-2018-4864-B942-FC5379CC0741}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{97303A08-2018-4864-B942-FC5379CC0741}.Release|Any CPU.Build.0 = Release|Any CPU
+		{790FFA46-E104-46C6-A693-93254AE4C7EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{790FFA46-E104-46C6-A693-93254AE4C7EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{790FFA46-E104-46C6-A693-93254AE4C7EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{790FFA46-E104-46C6-A693-93254AE4C7EA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {32E82FC6-F17F-4DC3-9F03-E58169A69547}
 	EndGlobalSection
 EndGlobal
