@@ -24,7 +24,7 @@ to deserialize a message to its correct .NET type. Then one could write multiple
 name that differ only by its parameter type and use `dynamic` keyword to dispatch a message to 
 a correct handler.
 
-```
+```C#
 public class DispatchHub : Hub {
     public override async Task OnReceiveAsync(MemoryStream payload) {
         // Extension method ReadJsonMessage returns IMessage object instance based on the `type` field in JSON
@@ -58,7 +58,7 @@ Authentication with a bearer token
 
 **From a C# client**
 
-```
+```C#
 var client = new ClientWebSocket();
 var header = new AuthenticationHeaderValue("Bearer", _accessToken);
 client.Options.RequestHeaders.Add("Authorization", header.ToString());
@@ -69,7 +69,7 @@ client.Options.RequestHeaders.Add("Authorization", header.ToString());
 It is impossible to add headers to WebSocket constructor in JavaScript, but we could 
 use protocol parameters for this. Here we are using RxJS WebSocketSubject:
 
-```
+```javascrypt
 import { WebSocketSubjectConfig, WebSocketSubject } from 'rxjs/observable/dom/WebSocketSubject';
 ...
 let wsConfig: WebSocketSubjectConfig = {
@@ -83,7 +83,7 @@ let ws = new WebSocketSubject<any>(wsConfig);
 ```
 Then in the very beginning of OWIN pipeline (before any identity middleware) 
 use this trick to populate the correct header:
-```
+```C#
 app.Use((context, next) => {
     if (!context.Request.Headers.ContainsKey("Authorization")
         && context.Request.Headers.ContainsKey("Upgrade")) {
@@ -101,7 +101,7 @@ app.Use((context, next) => {
 ```
 
 To use SignalW, create a custom Hub:
-```
+```C#
 [Authorize]
 public class Chat : Hub {
     public override Task OnConnectedAsync() {
@@ -123,7 +123,7 @@ public class Chat : Hub {
 
 Then add SignalW to the OWIN pipeline and map hubs to a path. Here we use SignalR together 
 with MVC on the "/api" path:
-```
+```C#
 public void ConfigureServices(IServiceCollection services) {
 	...
 	services.AddSignalW();
