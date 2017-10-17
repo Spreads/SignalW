@@ -3,8 +3,10 @@ SignalW
 
 Even simpler and faster real-time web for ASP.NET Core.
 
-`Install-Package Spreads.SignalW -Version 0.8.0-build1707052042` 
-`Install-Package Spreads.SignalW.Client -Version 0.8.0-build1707052042` 
+```
+Install-Package Spreads.SignalW -Version 0.8.0-build1707052042
+Install-Package Spreads.SignalW.Client -Version 0.8.0-build1707052042
+``` 
 
 SignalW is a simplified version of [SignalR](https://github.com/aspnet/SignalR), with only WebSockets as a transport 
 and `MemoryStream` as a message type.
