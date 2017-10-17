@@ -64,6 +64,7 @@ namespace Spreads.SignalW {
             return InvokeAllWhere(payload, connection => connection.ConnectionId != connectionId);
         }
 
+
         public override Task InvokeGroupAsync(string groupName, MemoryStream payload) {
             return InvokeAllWhere(payload, connection => {
                 var groups = connection.Metadata.Get<HashSet<string>>("groups");

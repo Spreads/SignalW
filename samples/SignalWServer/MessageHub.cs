@@ -1,17 +1,19 @@
-﻿using Spreads.SignalW;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using System.IO;
 using System.Threading.Tasks;
+using Spreads.Serialization;
+using System;
 
-namespace SiglanWServer
+namespace Spreads.SignalW
 {
     public class MessageHub : Hub
     {
+        //public static Gr
+
         public override Task OnConnectedAsync()
         {
-            Context.Connection.Channel.TryComplete();
+            Groups.AddAsync("Users");
+            
+            //Context.Connection.Channel.TryComplete(); -- Used to close connection
             return Task.FromResult(0);
         }
 
@@ -22,7 +24,7 @@ namespace SiglanWServer
 
         public override async Task OnReceiveAsync(MemoryStream payload)
         {
-            await Clients.All.InvokeAsync(payload);
+            await Clients.Group("Users").InvokeAsync(payload);
         }
     }
 }

@@ -6,11 +6,11 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+
 using Spreads.SignalW;
 using Spreads.SignalW.Client;
 
-namespace SiglanWServer
+namespace SignalWServer
 {
     public class Startup
     {
@@ -18,14 +18,12 @@ namespace SiglanWServer
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSignalW(); 
+            services.AddSignalW();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-            loggerFactory.AddConsole();
-
             app.Map("/api/signalw", signalw => {
                 signalw.UseSignalW((config) => {
                     config.MapHub<MessageHub>("messagehub", Format.Text);
