@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Spreads.SignalW.Client;
 using Spreads.SignalW.Connections;
 
@@ -51,6 +52,28 @@ namespace Spreads.SignalW {
                         // now pass this connection to a method that starts processing
                         var endpoint = context.RequestServices.GetRequiredService<HubEndPoint<THub>>();
                         var processingTask = endpoint.OnConnectedAsync(connection);
+
+
+                        var logger = context.RequestServices.GetRequiredService<ILogger<HubEndPoint<Echo>>>();
+                        var scopeFactory = context.RequestServices.GetRequiredService<IServiceScopeFactory>();
+
+
+                        AsynchronousSocketListener.StartListening(async (ws) =>
+                        {
+                            var channel1 = new WsChannel(ws, Format.Binary);
+
+                            var connection1 = new Connection
+                            {
+                                User = default,
+                                Channel = channel1,
+                                ConnectionId = "test"
+                            };
+                            connection1.Metadata.Format = Format.Binary;
+                            var ltm = new DefaultHubLifetimeManager<Echo>();
+                            var endpoint1 = new HubEndPoint<Echo>(ltm, new HubContext<Echo>(ltm), logger, scopeFactory);
+                            var processingTask1 = endpoint1.OnConnectedAsync(connection1);
+                            await Task.WhenAll(processingTask1, connection1.Channel.Completion);
+                        });
 
                         await Task.WhenAll(processingTask, connection.Channel.Completion);
 

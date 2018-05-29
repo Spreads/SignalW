@@ -9,6 +9,9 @@
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Cors" Version="2.1.0-rc1-final" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Formatters.Json" Version="2.1.0-rc1-final" />
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.1.0-rc1-final" />
+    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel.Transport.Libuv" Version="2.1.0-rc1-final" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.0.0-rc1-final" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client.Core" Version="1.0.0-rc1-final" />
   </ItemGroup>
 
   <ItemGroup>

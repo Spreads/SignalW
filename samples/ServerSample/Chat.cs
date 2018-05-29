@@ -21,8 +21,8 @@ public class Chat : Hub
         return Task.FromResult(0);
     }
 
-    public override async Task OnReceiveAsync(MemoryStream payload)
+    public override ValueTask OnReceiveAsync(MemoryStream payload)
     {
-        await Clients.All.InvokeAsync(payload);
+        return Clients.All.InvokeAsync(payload);
     }
 }

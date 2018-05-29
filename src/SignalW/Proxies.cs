@@ -16,7 +16,7 @@ namespace Spreads.SignalW {
             _userId = userId;
         }
 
-        public Task InvokeAsync(MemoryStream payload) {
+        public ValueTask InvokeAsync(MemoryStream payload) {
             return _lifetimeManager.InvokeUserAsync(_userId, payload);
         }
     }
@@ -30,7 +30,7 @@ namespace Spreads.SignalW {
             _userId = userId;
         }
 
-        public Task InvokeAsync(MemoryStream payload) {
+        public ValueTask InvokeAsync(MemoryStream payload) {
             return _lifetimeManager.InvokeExceptUserAsync(_userId, payload);
         }
     }
@@ -44,7 +44,7 @@ namespace Spreads.SignalW {
             _groupName = groupName;
         }
 
-        public Task InvokeAsync(MemoryStream payload) {
+        public ValueTask InvokeAsync(MemoryStream payload) {
             return _lifetimeManager.InvokeGroupAsync(_groupName, payload);
         }
     }
@@ -56,7 +56,7 @@ namespace Spreads.SignalW {
             _lifetimeManager = lifetimeManager;
         }
 
-        public Task InvokeAsync(MemoryStream payload) {
+        public ValueTask InvokeAsync(MemoryStream payload) {
             return _lifetimeManager.InvokeAllAsync(payload);
         }
     }
@@ -70,7 +70,7 @@ namespace Spreads.SignalW {
             _connectionId = connectionId;
         }
 
-        public Task InvokeAsync(MemoryStream payload) {
+        public ValueTask InvokeAsync(MemoryStream payload) {
             return _lifetimeManager.InvokeConnectionAsync(_connectionId, payload);
         }
     }
@@ -84,7 +84,7 @@ namespace Spreads.SignalW {
             _connectionId = connectionId;
         }
 
-        public Task InvokeAsync(MemoryStream payload) {
+        public ValueTask InvokeAsync(MemoryStream payload) {
             return _lifetimeManager.InvokeExceptConnectionAsync(_connectionId, payload);
         }
     }
@@ -98,11 +98,11 @@ namespace Spreads.SignalW {
             _lifetimeManager = lifetimeManager;
         }
 
-        public Task AddAsync(string groupName) {
+        public ValueTask AddAsync(string groupName) {
             return _lifetimeManager.AddGroupAsync(_connection, groupName);
         }
 
-        public Task RemoveAsync(string groupName) {
+        public ValueTask RemoveAsync(string groupName) {
             return _lifetimeManager.RemoveGroupAsync(_connection, groupName);
         }
     }

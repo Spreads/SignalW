@@ -7,7 +7,7 @@ namespace Spreads.SignalW
 {
     public interface IGroupManager
     {
-        Task AddAsync(string groupName);
-        Task RemoveAsync(string groupName);
+        ValueTask AddAsync(string groupName);
+        ValueTask RemoveAsync(string groupName);
     }
 }

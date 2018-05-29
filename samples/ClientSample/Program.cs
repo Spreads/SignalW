@@ -16,8 +16,13 @@ namespace ClientSample
         }
         public static async Task Run()
         {
+
+            var client_old = new ClientWebSocket();
+            await client_old.ConnectAsync(new Uri("ws://localhost:5002/api/signalw/echo?connectionId=test"), CancellationToken.None);
+
             var client = new ClientWebSocket();
-            await client.ConnectAsync(new Uri("ws://localhost:5002/api/signalw/echo?connectionId=test"), CancellationToken.None);
+            await client.ConnectAsync(new Uri("ws://127.0.0.1:5003"), CancellationToken.None);
+
             //var header = new AuthenticationHeaderValue("Bearer", _accessToken);
             //client.Options.SetRequestHeader("Authorization", header.ToString());
 

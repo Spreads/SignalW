@@ -120,7 +120,8 @@ namespace Microsoft.AspNetCore.WebSockets
                 Stream opaqueTransport = await _upgradeFeature.UpgradeAsync(); // Sets status code to 101
 
 #if NETCOREAPP2_1
-                return WebSocket.CreateFromStream(opaqueTransport, isServer: true, subProtocol: subProtocol, keepAliveInterval: keepAliveInterval);
+                var wrapperStream = new Spreads.SignalW.WebSockets.HttpUpgradeStream(opaqueTransport);
+                return WebSocket.CreateFromStream(wrapperStream, isServer: true, subProtocol: subProtocol, keepAliveInterval: keepAliveInterval);
 #else
                 return WebSocketProtocol.CreateFromStream(opaqueTransport, isServer: true, subProtocol: subProtocol, keepAliveInterval: keepAliveInterval);
 #endif

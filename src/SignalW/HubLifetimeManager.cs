@@ -13,21 +13,21 @@ namespace Spreads.SignalW
 
         public abstract Task OnDisconnectedAsync(Connection connection);
 
-        public abstract Task InvokeAllAsync(MemoryStream payload);
+        public abstract ValueTask InvokeAllAsync(MemoryStream payload);
 
-        public abstract Task InvokeConnectionAsync(string connectionId, MemoryStream payload);
+        public abstract ValueTask InvokeConnectionAsync(string connectionId, MemoryStream payload);
 
-        public abstract Task InvokeExceptConnectionAsync(string connectionId, MemoryStream payload);
+        public abstract ValueTask InvokeExceptConnectionAsync(string connectionId, MemoryStream payload);
 
-        public abstract Task InvokeGroupAsync(string groupName, MemoryStream payload);
+        public abstract ValueTask InvokeGroupAsync(string groupName, MemoryStream payload);
 
-        public abstract Task InvokeUserAsync(string userId, MemoryStream payload);
+        public abstract ValueTask InvokeUserAsync(string userId, MemoryStream payload);
 
-        public abstract Task InvokeExceptUserAsync(string userId, MemoryStream payload);
+        public abstract ValueTask InvokeExceptUserAsync(string userId, MemoryStream payload);
 
-        public abstract Task AddGroupAsync(Connection connection, string groupName);
+        public abstract ValueTask AddGroupAsync(Connection connection, string groupName);
 
-        public abstract Task RemoveGroupAsync(Connection connection, string groupName);
+        public abstract ValueTask RemoveGroupAsync(Connection connection, string groupName);
     }
 
 }

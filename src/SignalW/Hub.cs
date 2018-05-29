@@ -69,8 +69,8 @@ namespace Spreads.SignalW {
             return TaskCache.CompletedTask;
         }
 
-        public virtual Task OnReceiveAsync(MemoryStream payload) {
-            return TaskCache.CompletedTask;
+        public virtual ValueTask OnReceiveAsync(MemoryStream payload) {
+            return new ValueTask();
         }
 
         protected virtual void Dispose(bool disposing) {

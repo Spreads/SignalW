@@ -6,7 +6,7 @@ namespace Spreads.SignalW
 {
     public class MessageHub : Hub
     {
-        public override async Task OnReceiveAsync(MemoryStream payload)
+        public override async ValueTask OnReceiveAsync(MemoryStream payload)
         {
             var message = BinarySerializer.Json.Deserialize<IMessage>(payload);
             // dispose as soon as it is no longer used becasue it uses pooled buffers inside

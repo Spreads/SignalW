@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Spreads.SignalW;
 using Spreads.SignalW.Client;
+// using Microsoft.AspNet.SignalR;
 
 namespace ServerSample
 {
@@ -30,6 +31,11 @@ namespace ServerSample
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
+            //app.UseSignalR(routes =>
+            //{
+            //    routes.MapHub<Echo2>("/default");
+            //});
+
             app.Map("/api/signalw", signalw =>
             {
                 signalw.UseSignalW((config) =>

@@ -16,8 +16,4 @@
         <ProjectReference Include="..\SignalW.Client\SignalW.Client.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="WebSockets\" />
-    </ItemGroup>
-
 </Project>

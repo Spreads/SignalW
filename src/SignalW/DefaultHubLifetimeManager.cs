@@ -16,12 +16,12 @@ namespace Spreads.SignalW
     {
         private readonly ConnectionList _connections = new ConnectionList();
 
-        public override Task InvokeExceptUserAsync(string userId, MemoryStream payload)
+        public override ValueTask InvokeExceptUserAsync(string userId, MemoryStream payload)
         {
             return InvokeAllWhere(payload, connection => connection.User.Identity.Name != userId);
         }
 
-        public override Task AddGroupAsync(Connection connection, string groupName)
+        public override ValueTask AddGroupAsync(Connection connection, string groupName)
         {
             var groups = connection.Metadata.GetOrAdd("groups", _ => new HashSet<string>());
 
@@ -30,10 +30,10 @@ namespace Spreads.SignalW
                 groups.Add(groupName);
             }
 
-            return TaskCache.CompletedTask;
+            return new ValueTask();
         }
 
-        public override Task RemoveGroupAsync(Connection connection, string groupName)
+        public override ValueTask RemoveGroupAsync(Connection connection, string groupName)
         {
             var groups = connection.Metadata.Get<HashSet<string>>("groups");
 
@@ -42,18 +42,18 @@ namespace Spreads.SignalW
                 groups.Remove(groupName);
             }
 
-            return TaskCache.CompletedTask;
+            return new ValueTask();
         }
 
-        public override Task InvokeAllAsync(MemoryStream payload)
+        public override ValueTask InvokeAllAsync(MemoryStream payload)
         {
             return InvokeAllWhere(payload, c => true);
         }
 
-        private async Task InvokeAllWhere(MemoryStream payload, Func<Connection, bool> include)
+        private async ValueTask InvokeAllWhere(MemoryStream payload, Func<Connection, bool> include)
         {
             // TODO list pool like in Roslyn
-            var tasks = new List<ValueTask<bool>>(_connections.Count);
+            var tasks = new List<ValueTask>(_connections.Count);
 
             foreach (var connection in _connections)
             {
@@ -80,19 +80,30 @@ namespace Spreads.SignalW
             return;
         }
 
-        public override Task InvokeConnectionAsync(string connectionId, MemoryStream payload)
+        public override ValueTask InvokeConnectionAsync(string connectionId, MemoryStream payload)
         {
             var connection = _connections[connectionId];
             // TODO ValueTask
-            return connection.Channel.WriteAsync(payload).AsTask();
+            var t = connection.Channel.WriteAsync(payload);
+            if (!t.IsCompleted)
+            {
+                return InvokeConnectionAsyncSlow(t.AsTask());
+            }
+            return new ValueTask();
         }
 
-        public override Task InvokeExceptConnectionAsync(string connectionId, MemoryStream payload)
+        public async ValueTask InvokeConnectionAsyncSlow(Task t)
+        {
+            await t;
+            return;
+        }
+
+        public override ValueTask InvokeExceptConnectionAsync(string connectionId, MemoryStream payload)
         {
             return InvokeAllWhere(payload, connection => connection.ConnectionId != connectionId);
         }
 
-        public override Task InvokeGroupAsync(string groupName, MemoryStream payload)
+        public override ValueTask InvokeGroupAsync(string groupName, MemoryStream payload)
         {
             return InvokeAllWhere(payload, connection =>
             {
@@ -101,7 +112,7 @@ namespace Spreads.SignalW
             });
         }
 
-        public override Task InvokeUserAsync(string userId, MemoryStream payload)
+        public override ValueTask InvokeUserAsync(string userId, MemoryStream payload)
         {
             return InvokeAllWhere(payload, connection => connection.User.Identity.Name == userId);
         }
