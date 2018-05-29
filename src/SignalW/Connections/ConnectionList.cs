@@ -7,14 +7,16 @@ using System.Collections.Generic;
 
 namespace Spreads.SignalW.Connections {
     public class ConnectionList : IReadOnlyCollection<Connection> {
+        // TODO NetMQ keeps connections in a list + number of active
+        // We need this to iterate faster + fairer (the first one will get message on average faster)
+
         private readonly ConcurrentDictionary<string, Connection> _connections = new ConcurrentDictionary<string, Connection>();
 
         public Connection this[string connectionId]
         {
             get
             {
-                Connection connection;
-                if (_connections.TryGetValue(connectionId, out connection)) {
+                if (_connections.TryGetValue(connectionId, out var connection)) {
                     return connection;
                 }
                 return null;

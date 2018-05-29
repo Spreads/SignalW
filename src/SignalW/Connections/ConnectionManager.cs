@@ -47,8 +47,7 @@ namespace Spreads.SignalW.Connections
         }
 
         public void RemoveConnection(string id) {
-            ConnectionState state;
-            _connections.TryRemove(id, out state);
+            _connections.TryRemove(id, out _);
 
             // Remove the connection completely
         }

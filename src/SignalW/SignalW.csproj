@@ -1,19 +1,23 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <Import Project="..\..\build\common.props" />
     <PropertyGroup>
-        <TargetFrameworks>net451;netstandard1.6</TargetFrameworks>
+        <TargetFrameworks>netstandard2.0;netcoreapp2.1</TargetFrameworks>
         <AssemblyName>Spreads.SignalW</AssemblyName>
         <RootNamespace>Spreads.SignalW</RootNamespace>
+        <LangVersion>7.2</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.Routing" Version="1.1.2" />
-        <PackageReference Include="Microsoft.AspNetCore.WebSockets" Version="1.0.2" />
-        <PackageReference Include="Microsoft.Extensions.Logging" Version="1.1.2" />
+        <PackageReference Include="Microsoft.AspNetCore.Routing" Version="2.1.0-rc1-final" />
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="2.1.0-rc1-final" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\SignalW.Client\SignalW.Client.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="WebSockets\" />
     </ItemGroup>
 
 </Project>
