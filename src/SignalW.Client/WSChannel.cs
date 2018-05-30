@@ -63,13 +63,14 @@ namespace Spreads.SignalW.Client
                     {
                         throw new ArgumentException("Item is empty");
                     }
+
                     chunk = e.Current;
 
                     var endOfMessage = !e.MoveNext();
 
                     if (!endOfMessage) // mutipart async
                     {
-                        return WriteMultipartAsync(rms, disposeItem);
+                        return WriteMultipartAsync(rms);
                     }
 
 #if NETCOREAPP2_1
@@ -83,9 +84,16 @@ namespace Spreads.SignalW.Client
             {
                 return CloseAsync(ex);
             }
+            finally
+            {
+                if (disposeItem)
+                {
+                    rms.Dispose();
+                }
+            }
         }
 
-        private async ValueTask WriteMultipartAsync(RecyclableMemoryStream rms, bool disposeItem)
+        private async ValueTask WriteMultipartAsync(RecyclableMemoryStream rms)
         {
             using (var e = rms.Chunks.GetEnumerator())
             {
@@ -261,343 +269,6 @@ namespace Spreads.SignalW.Client
             rms.Dispose();
             return null;
         }
-
-        // TODO See extensions/WS transpprt
-        public async ValueTask<MemoryStream> ReadAsync1()
-        {
-            var blockSize = RecyclableMemoryStreamManager.Default.BlockSize;
-            byte[] buffer = null;
-            var moreThanOneBlock = true; // TODO first block optimization
-            // this will create the first chunk with default size
-            var ms = RecyclableMemoryStreamManager.Default.GetStream("WSChannel.ReadAsync", blockSize);
-
-            if (!_readSemaphore.Wait(0))
-            {
-                await _readSemaphore.WaitAsync(_cts.Token);
-            }
-
-            try
-            {
-                // TODO first block optimization
-                buffer = ArrayPool<byte>.Shared.Rent(blockSize); //ms.blocks[0];
-#if NETCOREAPP2_1
-                // Do a 0 byte read so that idle connections don't allocate a buffer when waiting for a read
-                var t = _ws.ReceiveAsync(Memory<byte>.Empty, CancellationToken.None);
-                var result = await t;
-                if (result.MessageType != WebSocketMessageType.Close)
-                {
-                    var task = _ws.ReceiveAsync((Memory<byte>)buffer, _cts.Token);
-                    if (task.IsCompletedSuccessfully)
-                    {
-                        result = task.Result;
-                    }
-                    else
-                    {
-                        result = await task;
-                    }
-                }
-#else
-                var result = await _ws.ReceiveAsync(new ArraySegment<byte>(buffer), _cts.Token);
-#endif
-
-                while (result.MessageType != WebSocketMessageType.Close && !_cts.IsCancellationRequested)
-                {
-                    // we write to the first block directly, to save one copy operation for
-                    // small messages (< blockSize), which should be the majorority of cases
-                    if (!moreThanOneBlock)
-                    {
-                        //ms.length = result.Count;
-                        //ms.Position = result.Count;
-                    }
-                    else
-                    {
-                        ms.Write(buffer, 0, result.Count);
-                    }
-                    if (!result.EndOfMessage)
-                    {
-                        //moreThanOneBlock = true;
-                        //buffer = ArrayPool<byte>.Shared.Rent(blockSize);
-#if NETCOREAPP2_1
-                        var task = _ws.ReceiveAsync((Memory<byte>)buffer, _cts.Token);
-                        result = task.IsCompletedSuccessfully ? task.Result : await task;
-#else
-                        result = await _ws.ReceiveAsync(new ArraySegment<byte>(buffer), _cts.Token);
-#endif
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-                if (result.MessageType == WebSocketMessageType.Close)
-                {
-                    _cts.Cancel();
-                    // TODO remove the line, the socket is already closed
-                    //await _ws.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
-                    _tcs.TrySetResult(null);
-                    ms.Dispose();
-                    ms = null;
-                }
-                else if (_cts.IsCancellationRequested)
-                {
-                    await _ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "NormalClosure", CancellationToken.None);
-                    _tcs.TrySetResult(null);
-                    ms.Dispose();
-                    ms = null;
-                }
-            }
-            catch (Exception ex)
-            {
-                if (_cts.IsCancellationRequested)
-                {
-                    await _ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "NormalClosure", CancellationToken.None);
-                    _tcs.TrySetResult(null);
-                }
-                else
-                {
-                    _tcs.TrySetResult(ex);
-                }
-                ms.Dispose();
-                ms = null;
-            }
-            finally
-            {
-                if (moreThanOneBlock)
-                {
-                    ArrayPool<byte>.Shared.Return(buffer, false);
-                }
-                _readSemaphore.Release();
-            }
-            return ms;
-        }
-
-        public async ValueTask<MemoryStream> ReadAsync3()
-        {
-            var len = 0;
-            var blockSize = RecyclableMemoryStreamManager.Default.BlockSize;
-            byte[] buffer = null;
-            var moreThanOneBlock = true; // TODO first block optimization
-            // this will create the first chunk with default size
-            // var ms = RecyclableMemoryStreamManager.Default.GetStream("WSChannel.ReadAsync", blockSize);
-
-            if (!_readSemaphore.Wait(0))
-            {
-                await _readSemaphore.WaitAsync(_cts.Token);
-            }
-
-            try
-            {
-                // TODO first block optimization
-                buffer = ArrayPool<byte>.Shared.Rent(blockSize); //ms.blocks[0];
-
-#if NETCOREAPP2_1
-                // Do a 0 byte read so that idle connections don't allocate a buffer when waiting for a read
-                var t = _ws.ReceiveAsync(Memory<byte>.Empty, CancellationToken.None);
-                ValueWebSocketReceiveResult result;
-                if (t.IsCompleted)
-                { result = t.Result; }
-                else
-                { result = await t; }
-
-                if (result.MessageType != WebSocketMessageType.Close)
-                {
-                    var task = _ws.ReceiveAsync((Memory<byte>)buffer, _cts.Token);
-                    if (task.IsCompletedSuccessfully)
-                    {
-                        result = task.Result;
-                    }
-                    else
-                    {
-                        result = await task;
-                    }
-
-                    len = result.Count;
-                }
-#else
-                var result = await _ws.ReceiveAsync(new ArraySegment<byte>(buffer), _cts.Token);
-#endif
-
-                //                while (result.MessageType != WebSocketMessageType.Close && !_cts.IsCancellationRequested)
-                //                {
-                //                    // we write to the first block directly, to save one copy operation for
-                //                    // small messages (< blockSize), which should be the majorority of cases
-                //                    if (!moreThanOneBlock)
-                //                    {
-                //                        //ms.length = result.Count;
-                //                        //ms.Position = result.Count;
-                //                    }
-                //                    else
-                //                    {
-                //                        ms.Write(buffer, 0, result.Count);
-                //                    }
-                //                    if (!result.EndOfMessage)
-                //                    {
-                //                        //moreThanOneBlock = true;
-                //                        //buffer = ArrayPool<byte>.Shared.Rent(blockSize);
-                //#if NETCOREAPP2_1
-                //                        var task = _ws.ReceiveAsync((Memory<byte>)buffer, _cts.Token);
-                //                        result = task.IsCompletedSuccessfully ? task.Result : await task;
-                //#else
-                //                        result = await _ws.ReceiveAsync(new ArraySegment<byte>(buffer), _cts.Token);
-                //#endif
-                //                    }
-                //                    else
-                //                    {
-                //                        break;
-                //                    }
-                //                }
-                if (result.MessageType == WebSocketMessageType.Close)
-                {
-                    _cts.Cancel();
-                    // TODO remove the line, the socket is already closed
-                    //await _ws.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
-                    _tcs.TrySetResult(null);
-                    //ms.Dispose();
-                    //ms = null;
-                }
-                else if (_cts.IsCancellationRequested)
-                {
-                    await _ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "NormalClosure", CancellationToken.None);
-                    _tcs.TrySetResult(null);
-                    //ms.Dispose();
-                    //ms = null;
-                }
-            }
-            catch (Exception ex)
-            {
-                if (_cts.IsCancellationRequested)
-                {
-                    await _ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "NormalClosure", CancellationToken.None);
-                    _tcs.TrySetResult(null);
-                }
-                else
-                {
-                    _tcs.TrySetResult(ex);
-                }
-                //ms.Dispose();
-                //ms = null;
-            }
-            finally
-            {
-                if (moreThanOneBlock)
-                {
-                    ArrayPool<byte>.Shared.Return(buffer, false);
-                }
-                _readSemaphore.Release();
-            }
-            return RecyclableMemoryStreamManager.Default.GetStream(null, buffer, 0, len);
-        }
-
-        // sync
-        public ValueTask<MemoryStream> ReadAsyncxxx()
-        {
-            var len = 0;
-            var blockSize = RecyclableMemoryStreamManager.Default.BlockSize;
-            byte[] buffer = null;
-            var moreThanOneBlock = true; // TODO first block optimization
-            // this will create the first chunk with default size
-            // var ms = RecyclableMemoryStreamManager.Default.GetStream("WSChannel.ReadAsync", blockSize);
-
-            _readSemaphore.Wait();
-
-            try
-            {
-                // TODO first block optimization
-                buffer = ArrayPool<byte>.Shared.Rent(blockSize); //ms.blocks[0];
-
-#if NETCOREAPP2_1
-                // Do a 0 byte read so that idle connections don't allocate a buffer when waiting for a read
-                var t = _ws.ReceiveAsync(Memory<byte>.Empty, CancellationToken.None);
-                ValueWebSocketReceiveResult result;
-                result = t.Result;
-
-                if (result.MessageType != WebSocketMessageType.Close)
-                {
-                    var task = _ws.ReceiveAsync((Memory<byte>)buffer, _cts.Token);
-
-                    result = task.Result;
-
-                    len = result.Count;
-                }
-#else
-                var result = _ws.ReceiveAsync(new ArraySegment<byte>(buffer), _cts.Token).Result;
-#endif
-
-                //                while (result.MessageType != WebSocketMessageType.Close && !_cts.IsCancellationRequested)
-                //                {
-                //                    // we write to the first block directly, to save one copy operation for
-                //                    // small messages (< blockSize), which should be the majorority of cases
-                //                    if (!moreThanOneBlock)
-                //                    {
-                //                        //ms.length = result.Count;
-                //                        //ms.Position = result.Count;
-                //                    }
-                //                    else
-                //                    {
-                //                        ms.Write(buffer, 0, result.Count);
-                //                    }
-                //                    if (!result.EndOfMessage)
-                //                    {
-                //                        //moreThanOneBlock = true;
-                //                        //buffer = ArrayPool<byte>.Shared.Rent(blockSize);
-                //#if NETCOREAPP2_1
-                //                        var task = _ws.ReceiveAsync((Memory<byte>)buffer, _cts.Token);
-                //                        result = task.IsCompletedSuccessfully ? task.Result : await task;
-                //#else
-                //                        result = await _ws.ReceiveAsync(new ArraySegment<byte>(buffer), _cts.Token);
-                //#endif
-                //                    }
-                //                    else
-                //                    {
-                //                        break;
-                //                    }
-                //                }
-                if (result.MessageType == WebSocketMessageType.Close)
-                {
-                    _cts.Cancel();
-                    // TODO remove the line, the socket is already closed
-                    //await _ws.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
-                    _tcs.TrySetResult(null);
-                    //ms.Dispose();
-                    //ms = null;
-                }
-                else if (_cts.IsCancellationRequested)
-                {
-                    _ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "NormalClosure", CancellationToken.None).Wait();
-                    _tcs.TrySetResult(null);
-                    //ms.Dispose();
-                    //ms = null;
-                }
-            }
-            catch (Exception ex)
-            {
-                if (_cts.IsCancellationRequested)
-                {
-                    _ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "NormalClosure", CancellationToken.None).Wait();
-                    _tcs.TrySetResult(null);
-                }
-                else
-                {
-                    _tcs.TrySetResult(ex);
-                }
-                //ms.Dispose();
-                //ms = null;
-            }
-            finally
-            {
-                if (moreThanOneBlock)
-                {
-                    ArrayPool<byte>.Shared.Return(buffer, false);
-                }
-                _readSemaphore.Release();
-            }
-            return new ValueTask<MemoryStream>(RecyclableMemoryStreamManager.Default.GetStream(null, buffer, 0, len));
-        }
-
-        //private ValueTask<ValueWebSocketReceiveResult> ProcessTask(Task<ValueWebSocketReceiveResult> t)
-        //{
-        //    return new ValueTask<ValueWebSocketReceiveResult>(t);
-        //}
 
         public override Task<Exception> Completion => _tcs.Task;
     }
