@@ -3,18 +3,18 @@
 
 namespace Spreads.SignalW
 {
-    public interface IHubConnectionContext<TClient>
+    public interface IHubConnectionContext
     {
-        TClient All { get; }
+        IClientProxy All { get; }
 
-        TClient Client(string connectionId);
+        IClientProxy Client(string connectionId);
 
-        TClient ExceptClient(string connectionId);
+        IClientProxy ExceptClient(string connectionId);
 
-        TClient Group(string groupName);
+        IClientProxy Group(string groupName);
 
-        TClient User(string userId);
+        IClientProxy User(string userId);
 
-        TClient ExceptUser(string userId);
+        IClientProxy ExceptUser(string userId);
     }
 }

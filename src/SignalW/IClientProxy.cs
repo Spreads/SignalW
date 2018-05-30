@@ -11,7 +11,7 @@ namespace Spreads.SignalW
         /// <summary>
         /// Invokes a method on the connection(s) represented by the <see cref="IClientProxy"/> instance.
         /// </summary>
-        /// <returns>A task that represents when the data has been sent to the client.</returns>
-        ValueTask InvokeAsync(MemoryStream payload);
+        /// <returns>A ValueTask that represents when the data has been sent to the client.</returns>
+        ValueTask SendAsync(MemoryStream payload);
     }
 }

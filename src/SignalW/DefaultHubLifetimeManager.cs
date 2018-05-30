@@ -120,13 +120,13 @@ namespace Spreads.SignalW
         public override Task OnConnectedAsync(Connection connection)
         {
             _connections.Add(connection);
-            return TaskCache.CompletedTask;
+            return Task.CompletedTask;
         }
 
         public override Task OnDisconnectedAsync(Connection connection)
         {
             _connections.Remove(connection);
-            return TaskCache.CompletedTask;
+            return Task.CompletedTask;
         }
     }
 }

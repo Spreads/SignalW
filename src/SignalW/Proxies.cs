@@ -16,7 +16,7 @@ namespace Spreads.SignalW {
             _userId = userId;
         }
 
-        public ValueTask InvokeAsync(MemoryStream payload) {
+        public ValueTask SendAsync(MemoryStream payload) {
             return _lifetimeManager.InvokeUserAsync(_userId, payload);
         }
     }
@@ -30,7 +30,7 @@ namespace Spreads.SignalW {
             _userId = userId;
         }
 
-        public ValueTask InvokeAsync(MemoryStream payload) {
+        public ValueTask SendAsync(MemoryStream payload) {
             return _lifetimeManager.InvokeExceptUserAsync(_userId, payload);
         }
     }
@@ -44,7 +44,7 @@ namespace Spreads.SignalW {
             _groupName = groupName;
         }
 
-        public ValueTask InvokeAsync(MemoryStream payload) {
+        public ValueTask SendAsync(MemoryStream payload) {
             return _lifetimeManager.InvokeGroupAsync(_groupName, payload);
         }
     }
@@ -56,7 +56,7 @@ namespace Spreads.SignalW {
             _lifetimeManager = lifetimeManager;
         }
 
-        public ValueTask InvokeAsync(MemoryStream payload) {
+        public ValueTask SendAsync(MemoryStream payload) {
             return _lifetimeManager.InvokeAllAsync(payload);
         }
     }
@@ -70,7 +70,7 @@ namespace Spreads.SignalW {
             _connectionId = connectionId;
         }
 
-        public ValueTask InvokeAsync(MemoryStream payload) {
+        public ValueTask SendAsync(MemoryStream payload) {
             return _lifetimeManager.InvokeConnectionAsync(_connectionId, payload);
         }
     }
@@ -84,7 +84,7 @@ namespace Spreads.SignalW {
             _connectionId = connectionId;
         }
 
-        public ValueTask InvokeAsync(MemoryStream payload) {
+        public ValueTask SendAsync(MemoryStream payload) {
             return _lifetimeManager.InvokeExceptConnectionAsync(_connectionId, payload);
         }
     }

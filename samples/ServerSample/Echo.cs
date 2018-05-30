@@ -10,7 +10,7 @@ public class Echo : Hub
 {
     public override ValueTask OnReceiveAsync(MemoryStream payload)
     {
-        Clients.Client(Context.ConnectionId).InvokeAsync(payload);
+        Clients.Client(Context.ConnectionId).SendAsync(payload);
         return new ValueTask();
     }
 }

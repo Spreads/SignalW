@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Net;
+using System.Runtime;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions.Internal;
 using Microsoft.Extensions.Configuration;
@@ -10,6 +11,8 @@ namespace ServerSample
     {
         public static void Main(string[] args)
         {
+            GCSettings.LatencyMode = GCLatencyMode.LowLatency;
+
             var config = new ConfigurationBuilder()
                 .Build();
 
@@ -24,7 +27,7 @@ namespace ServerSample
                     options.ApplicationSchedulingMode = SchedulingMode.Inline;
                 })
                 .UseContentRoot(Directory.GetCurrentDirectory())
-                // .UseLibuv()
+                .UseLibuv()
                 .UseStartup<Startup>()
                 .Build();
             host.Run();

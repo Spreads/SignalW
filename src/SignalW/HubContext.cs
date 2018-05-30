@@ -3,7 +3,7 @@
 
 namespace Spreads.SignalW
 {
-    public class HubContext<THub> : IHubContext<THub>, IHubConnectionContext<IClientProxy>
+    public class HubContext<THub> : IHubContext<THub>, IHubConnectionContext
     {
         private readonly HubLifetimeManager<THub> _lifetimeManager;
         private readonly AllClientProxy<THub> _all;
@@ -14,7 +14,7 @@ namespace Spreads.SignalW
             _all = new AllClientProxy<THub>(_lifetimeManager);
         }
 
-        public IHubConnectionContext<IClientProxy> Clients => this;
+        public IHubConnectionContext Clients => this;
 
         public virtual IClientProxy All => _all;
 

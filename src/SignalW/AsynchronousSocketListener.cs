@@ -62,6 +62,7 @@ namespace Spreads.SignalW
                     Console.WriteLine("Waiting for a connection...");
 
                     var socket = await listener.AcceptAsync();
+                    
                     var stream = new NetworkStream(socket);
 #if NETCOREAPP2_1
                     var ws = WebSocket.CreateFromStream(stream, true, null, TimeSpan.FromMinutes(5));

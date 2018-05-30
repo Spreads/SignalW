@@ -3,12 +3,8 @@
 
 namespace Spreads.SignalW
 {
-    public interface IHubContext<THub, TClient>
+    public interface IHubContext<THub>
     {
-        IHubConnectionContext<TClient> Clients { get; }
-    }
-
-    public interface IHubContext<THub> : IHubContext<THub, IClientProxy>
-    {
+        IHubConnectionContext Clients { get; }
     }
 }

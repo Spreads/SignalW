@@ -20,11 +20,11 @@ namespace ServerSample
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            var mvcCoreBuilder = services.AddMvcCore();
-            mvcCoreBuilder
-                .AddFormatterMappings()
-                .AddJsonFormatters()
-                .AddCors();
+            //var mvcCoreBuilder = services.AddMvcCore();
+            //mvcCoreBuilder
+            //    .AddFormatterMappings()
+            //    .AddJsonFormatters()
+            //    .AddCors();
             services.AddSignalW();
         }
 
@@ -48,11 +48,11 @@ namespace ServerSample
                     config.MapHub<Echo>("echo", Format.Binary);
                 });
             });
-            app.Map("/api", apiApp =>
-            {
-                apiApp.UseMvc();
-            });
-            app.UseMvc();
+            //app.Map("/api", apiApp =>
+            //{
+            //    apiApp.UseMvc();
+            //});
+            //app.UseMvc();
         }
     }
 }

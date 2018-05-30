@@ -9,36 +9,20 @@ using System.Threading.Tasks;
 
 namespace Spreads.SignalW
 {
-    public class HubEndPoint<THub> : HubEndPoint<THub, IClientProxy> where THub : Hub<IClientProxy>
-    {
-        public HubEndPoint(HubLifetimeManager<THub> lifetimeManager,
-                           IHubContext<THub> hubContext,
-                           ILogger<HubEndPoint<THub>> logger,
-                           IServiceScopeFactory serviceScopeFactory) : base(lifetimeManager, hubContext, logger, serviceScopeFactory)
-        {
-        }
-    }
 
-    public class HubEndPoint<THub, TClient> where THub : Hub<TClient>
+    public class HubEndPoint<THub> where THub : Hub, new()
     {
         private readonly HubLifetimeManager<THub> _lifetimeManager;
-        private readonly IHubContext<THub, TClient> _hubContext;
-        private readonly ILogger<HubEndPoint<THub, TClient>> _logger;
+        private readonly IHubContext<THub> _hubContext;
         private THub _hub;
-        private readonly IServiceScope _scope;
-        private IHubActivator<THub, TClient> _hubActivator;
+        // private readonly IServiceScope _scope;
 
         public HubEndPoint(HubLifetimeManager<THub> lifetimeManager,
-                           IHubContext<THub, TClient> hubContext,
-                           ILogger<HubEndPoint<THub, TClient>> logger,
-                           IServiceScopeFactory serviceScopeFactory)
+                           IHubContext<THub> hubContext)
         {
             _lifetimeManager = lifetimeManager;
             _hubContext = hubContext;
-            _logger = logger;
-            _scope = serviceScopeFactory.CreateScope();
-            _hubActivator = _scope.ServiceProvider.GetRequiredService<IHubActivator<THub, TClient>>();
-            _hub = _hubActivator.Create();
+            _hub = Activator.CreateInstance<THub>();
         }
 
         public async Task OnConnectedAsync(Connection connection)
@@ -57,7 +41,8 @@ namespace Spreads.SignalW
             }
             catch (Exception ex)
             {
-                _logger.LogError(0, ex, "Error when processing requests.");
+                // TODO error logger
+                // _logger.LogError(0, ex, "Error when processing requests.");
                 exception = ex;
                 connection.Channel.TryComplete();
             }
@@ -75,8 +60,7 @@ namespace Spreads.SignalW
                 }
                 finally
                 {
-                    _hubActivator.Release(_hub);
-                    _scope.Dispose();
+                    _hub.Dispose();
                 }
 
                 await _lifetimeManager.OnDisconnectedAsync(connection);
@@ -96,10 +80,10 @@ namespace Spreads.SignalW
                     break;
                 }
 
-                if (_logger.IsEnabled(LogLevel.Debug))
-                {
-                    _logger.LogDebug($"Received hub invocation payload length: {payload.Length}");
-                }
+                //if (_logger.IsEnabled(LogLevel.Debug))
+                //{
+                //    _logger.LogDebug($"Received hub invocation payload length: {payload.Length}");
+                //}
 
                 await _hub.OnReceiveAsync(payload);
 

@@ -3,6 +3,7 @@ using System;
 using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Net.WebSockets;
+using System.Runtime;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,12 +17,12 @@ namespace ClientSample
         }
         public static async Task Run()
         {
-
-            var client_old = new ClientWebSocket();
-            await client_old.ConnectAsync(new Uri("ws://localhost:5002/api/signalw/echo?connectionId=test"), CancellationToken.None);
-
+            GCSettings.LatencyMode = GCLatencyMode.SustainedLowLatency;
             var client = new ClientWebSocket();
-            await client.ConnectAsync(new Uri("ws://127.0.0.1:5003"), CancellationToken.None);
+            await client.ConnectAsync(new Uri("ws://localhost:5002/api/signalw/echo?connectionId=test"), CancellationToken.None);
+
+            //var client = new ClientWebSocket();
+            //await client.ConnectAsync(new Uri("ws://127.0.0.1:5003"), CancellationToken.None);
 
             //var header = new AuthenticationHeaderValue("Bearer", _accessToken);
             //client.Options.SetRequestHeader("Authorization", header.ToString());
@@ -42,26 +43,76 @@ namespace ClientSample
                 var t3 = channel.WriteAsync(stream);
                 var t4 = channel.WriteAsync(stream);
                 var t5 = channel.WriteAsync(stream);
+                var t6 = channel.WriteAsync(stream);
+                var t7 = channel.WriteAsync(stream);
+                var t8 = channel.WriteAsync(stream);
+                var t9 = channel.WriteAsync(stream);
+                var t10 = channel.WriteAsync(stream);
+                //var t11 = channel.WriteAsync(stream);
+                //var t12 = channel.WriteAsync(stream);
+                //var t13 = channel.WriteAsync(stream);
+                //var t14 = channel.WriteAsync(stream);
+                //var t15 = channel.WriteAsync(stream);
                 await t1;
                 await t2;
                 await t3;
                 await t4;
                 await t5;
+                await t6;
+                await t7;
+                await t8;
+                await t9;
+                await t10;
+                //await t11;
+                //await t12;
+                //await t13;
+                //await t14;
+                //await t15;
                 var result1 = channel.ReadAsync();
                 var result2 = channel.ReadAsync();
                 var result3 = channel.ReadAsync();
                 var result4 = channel.ReadAsync();
                 var result5 = channel.ReadAsync();
+                var result6 = channel.ReadAsync();
+                var result7 = channel.ReadAsync();
+                var result8 = channel.ReadAsync();
+                var result9 = channel.ReadAsync();
+                var result10 = channel.ReadAsync();
+                //var result11 = channel.ReadAsync();
+                //var result12 = channel.ReadAsync();
+                //var result13 = channel.ReadAsync();
+                //var result14 = channel.ReadAsync();
+                //var result15 = channel.ReadAsync();
                 (await result1).Dispose();
                 (await result2).Dispose();
                 (await result3).Dispose();
                 (await result4).Dispose();
                 (await result5).Dispose();
+                (await result6).Dispose();
+                (await result7).Dispose();
+                (await result8).Dispose();
+                (await result9).Dispose();
+                (await result10).Dispose();
+                //(await result11).Dispose();
+                //(await result12).Dispose();
+                //(await result13).Dispose();
+                //(await result14).Dispose();
+                //(await result15).Dispose();
                 count++;
                 count++;
                 count++;
                 count++;
                 count++;
+                count++;
+                count++;
+                count++;
+                count++;
+                count++;
+                //count++;
+                //count++;
+                //count++;
+                //count++;
+                //count++;
                 if (count % 10000 == 0)
                 {
                     var elapsed = sw.ElapsedMilliseconds;

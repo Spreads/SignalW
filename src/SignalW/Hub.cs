@@ -8,18 +8,15 @@ using Spreads.SignalW.Client;
 
 namespace Spreads.SignalW {
 
-    public class Hub : Hub<IClientProxy> {
-    }
-
-    public class Hub<TClient> : IDisposable {
+    public class Hub : IDisposable {
         private bool _disposed;
-        private IHubConnectionContext<TClient> _clients;
+        private IHubConnectionContext _clients;
         private HubCallerContext _context;
         private IGroupManager _groups;
 
         public Format Format { get; set; } = Format.Text;
 
-        public IHubConnectionContext<TClient> Clients
+        public IHubConnectionContext Clients
         {
             get
             {
@@ -62,11 +59,11 @@ namespace Spreads.SignalW {
         }
 
         public virtual Task OnConnectedAsync() {
-            return TaskCache.CompletedTask;
+            return Task.CompletedTask;
         }
 
         public virtual Task OnDisconnectedAsync(Exception exception) {
-            return TaskCache.CompletedTask;
+            return Task.CompletedTask;
         }
 
         public virtual ValueTask OnReceiveAsync(MemoryStream payload) {

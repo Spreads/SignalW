@@ -23,6 +23,6 @@ public class Chat : Hub
 
     public override ValueTask OnReceiveAsync(MemoryStream payload)
     {
-        return Clients.All.InvokeAsync(payload);
+        return Clients.All.SendAsync(payload);
     }
 }

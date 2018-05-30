@@ -11,7 +11,6 @@ namespace Spreads.SignalW {
             services.AddSingleton(typeof(HubLifetimeManager<>), typeof(DefaultHubLifetimeManager<>));
             services.AddSingleton(typeof(IHubContext<>), typeof(HubContext<>));
             services.AddScoped(typeof(HubEndPoint<>), typeof(HubEndPoint<>));
-            services.AddScoped(typeof(IHubActivator<,>), typeof(DefaultHubActivator<,>));
             services.AddRouting();
             
             return new SignalWBuilder(services);
