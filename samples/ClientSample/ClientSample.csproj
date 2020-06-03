@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Spreads.Core" Version="1.0.0-build1805290629R" />
+    <PackageReference Include="Spreads.Core" Version="1.0.0-build1805310656R" />
   </ItemGroup>
 
   <ItemGroup>

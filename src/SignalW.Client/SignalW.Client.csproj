@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.WebSockets" Version="2.1.0" />
-    <PackageReference Include="Spreads.Core" Version="1.0.0-build1805290629R" />
+    <PackageReference Include="Spreads.Core" Version="1.0.0-build1805310656R" />
     <PackageReference Include="System.Threading.Channels" Version="4.5.0" />
   </ItemGroup>
 

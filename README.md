@@ -1,4 +1,4 @@
-SignalW
+SignalW (not maintained)
 ========
 
 Even simpler and faster real-time web for ASP.NET Core.

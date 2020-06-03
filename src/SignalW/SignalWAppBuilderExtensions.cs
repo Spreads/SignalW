@@ -119,8 +119,8 @@ namespace Spreads.SignalW
                             ? (string)context.Request.Query["connectionId"]
                             : Guid.NewGuid().ToString();
 
-                        await ProcessAsync(webSocket);
-                        return;
+                        //await ProcessAsync(webSocket);
+                        //return;
 
                         var channel = new WsChannel(webSocket, format);
 
@@ -136,23 +136,6 @@ namespace Spreads.SignalW
                         // now pass this connection to a method that starts processing
                         var endpoint = context.RequestServices.GetRequiredService<HubEndPoint<THub>>();
                         var processingTask = endpoint.OnConnectedAsync(connection);
-
-                        //AsynchronousSocketListener.StartListening(async (ws) =>
-                        //{
-                        //    var channel1 = new WsChannel(ws, Format.Binary);
-
-                        //    var connection1 = new Connection
-                        //    {
-                        //        User = default,
-                        //        Channel = channel1,
-                        //        ConnectionId = "test"
-                        //    };
-                        //    connection1.Metadata.Format = Format.Binary;
-                        //    var ltm = new DefaultHubLifetimeManager<Echo>();
-                        //    var endpoint1 = new HubEndPoint<Echo>(ltm, new HubContext<Echo>(ltm));
-                        //    var processingTask1 = endpoint1.OnConnectedAsync(connection1);
-                        //    await Task.WhenAll(processingTask1, connection1.Channel.Completion);
-                        //});
 
                         await Task.WhenAll(processingTask, connection.Channel.Completion);
 

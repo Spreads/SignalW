@@ -11,7 +11,7 @@ namespace ServerSample
     {
         public static void Main(string[] args)
         {
-            GCSettings.LatencyMode = GCLatencyMode.LowLatency;
+            GCSettings.LatencyMode = GCLatencyMode.SustainedLowLatency;
 
             var config = new ConfigurationBuilder()
                 .Build();

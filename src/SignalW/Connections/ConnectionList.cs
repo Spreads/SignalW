@@ -1,11 +1,17 @@
 ﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace Spreads.SignalW.Connections {
+
+    // TODO SendToAll
+
     public class ConnectionList : IReadOnlyCollection<Connection> {
         // TODO NetMQ keeps connections in a list + number of active
         // We need this to iterate faster + fairer (the first one will get message on average faster)
@@ -35,6 +41,7 @@ namespace Spreads.SignalW.Connections {
         }
 
         public IEnumerator<Connection> GetEnumerator() {
+            
             foreach (var item in _connections) {
                 yield return item.Value;
             }
@@ -42,6 +49,11 @@ namespace Spreads.SignalW.Connections {
 
         IEnumerator IEnumerable.GetEnumerator() {
             return GetEnumerator();
+        }
+
+        public ValueTask SendToAll(MemoryStream message)
+        {
+            throw new NotImplementedException();
         }
     }
 }

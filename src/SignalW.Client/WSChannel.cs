@@ -10,7 +10,7 @@ namespace Spreads.SignalW.Client
 {
     public abstract class Channel
     {
-        public abstract ValueTask WriteAsync(MemoryStream item, bool disposeItem);
+        public abstract ValueTask WriteAsync(MemoryStream item, bool disposeItem = false);
 
         public abstract ValueTask<bool> TryComplete();
 
@@ -26,6 +26,8 @@ namespace Spreads.SignalW.Client
 
         private TaskCompletionSource<Exception> _tcs;
         private CancellationTokenSource _cts;
+        private readonly SemaphoreSlim _readSemaphore = new SemaphoreSlim(1, 1);
+        private readonly SemaphoreSlim _writeSemaphore = new SemaphoreSlim(1, 1);
 
         //private readonly SemaphoreSlim _readSemaphore = new SemaphoreSlim(1, 1);
         //private readonly SemaphoreSlim _writeSemaphore = new SemaphoreSlim(1, 1);
@@ -38,8 +40,9 @@ namespace Spreads.SignalW.Client
             _cts = new CancellationTokenSource();
         }
 
-        public override ValueTask WriteAsync(MemoryStream item, bool disposeItem)
+        public override ValueTask WriteAsync(MemoryStream item, bool disposeItem = false)
         {
+            item.Position = 0;
             if (!(item is RecyclableMemoryStream rms)) // no supposed case
             {
                 rms = RecyclableMemoryStreamManager.Default.GetStream(null, checked((int)item.Length));
@@ -49,9 +52,13 @@ namespace Spreads.SignalW.Client
                     item.Dispose();
                 }
             }
-
             try
             {
+                if (!_writeSemaphore.Wait(0))
+                {
+                    return ContinueWriteAsync(rms, true);
+                }
+
                 // TODO for now assume struct enums are free and do not need dispose, maybe refacor RMS later
                 using (var e = rms.Chunks.GetEnumerator())
                 {
@@ -70,18 +77,21 @@ namespace Spreads.SignalW.Client
 
                     if (!endOfMessage) // mutipart async
                     {
-                        return WriteMultipartAsync(rms);
+                        return ContinueWriteAsync(rms, false);
                     }
 
 #if NETCOREAPP2_1
-                    return _ws.SendAsync((ReadOnlyMemory<byte>)chunk, type, true, _cts.Token);
+                    var result = _ws.SendAsync((ReadOnlyMemory<byte>)chunk, type, true, _cts.Token);
 #else
-                    return new ValueTask(_ws.SendAsync(chunk, type, true, _cts.Token));
+                    var result = new ValueTask(_ws.SendAsync(chunk, type, true, _cts.Token));
 #endif
+                    _writeSemaphore.Release();
+                    return result;
                 }
             }
             catch (Exception ex)
             {
+                _writeSemaphore.Release();
                 return CloseAsync(ex);
             }
             finally
@@ -93,30 +103,49 @@ namespace Spreads.SignalW.Client
             }
         }
 
-        private async ValueTask WriteMultipartAsync(RecyclableMemoryStream rms)
+        private async ValueTask ContinueWriteAsync(RecyclableMemoryStream rms, bool doAwaitSemaphore)
         {
-            using (var e = rms.Chunks.GetEnumerator())
+            try
             {
-                var type = _format == Format.Binary
-                    ? WebSocketMessageType.Binary
-                    : WebSocketMessageType.Text;
-                ArraySegment<byte> chunk;
-                if (e.MoveNext())
+                if (doAwaitSemaphore)
                 {
-                    while (true)
+                    await _writeSemaphore.WaitAsync(_cts.Token);
+                }
+
+                using (var e = rms.Chunks.GetEnumerator())
+                {
+                    var type = _format == Format.Binary
+                        ? WebSocketMessageType.Binary
+                        : WebSocketMessageType.Text;
+                    ArraySegment<byte> chunk;
+                    if (e.MoveNext())
                     {
-                        chunk = e.Current;
-                        var endOfMessage = !e.MoveNext();
+                        while (true)
+                        {
+                            chunk = e.Current;
+                            var endOfMessage = !e.MoveNext();
 
 #if NETCOREAPP2_1
-                        await _ws.SendAsync((ReadOnlyMemory<byte>)chunk, type, endOfMessage, _cts.Token);
+                            await _ws.SendAsync((ReadOnlyMemory<byte>) chunk, type, endOfMessage, _cts.Token);
 
 #else
                         await _ws.SendAsync(chunk, type, endOfMessage, _cts.Token);
 #endif
-                        if (endOfMessage) { break; }
+                            if (endOfMessage)
+                            {
+                                break;
+                            }
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                await CloseAsync(ex);
+            }
+            finally
+            {
+                _writeSemaphore.Release();
             }
         }
 
@@ -155,14 +184,21 @@ namespace Spreads.SignalW.Client
             RecyclableMemoryStream rms = null;
             try
             {
+                if (!_readSemaphore.Wait(0))
+                {
+                    return ContinueReadAsync(null, true, null);
+                }
 #if NETCOREAPP2_1
-
+                if (_ws.State != WebSocketState.Open)
+                {
+                    Console.WriteLine("catch me");
+                }
                 // Do a 0 byte read so that idle connections don't allocate a buffer when waiting for a read
                 var t = _ws.ReceiveAsync(Memory<byte>.Empty, CancellationToken.None);
 
                 if (!t.IsCompletedSuccessfully)
                 {
-                    return ContinueReadAsync(null);
+                    return ContinueReadAsync(null, false, t.AsTask());
                 }
 
                 // this will create the first chunk with default size
@@ -172,33 +208,35 @@ namespace Spreads.SignalW.Client
                 var result = t.Result;
                 if (result.MessageType != WebSocketMessageType.Close)
                 {
-                    // ReSharper disable once GenericEnumeratorNotDisposed
-                    var r = rms.Chunks.GetEnumerator();
-                    if (!r.MoveNext())
-                    {
-                        throw new System.ApplicationException("Fresh RMS has no chunks");
-                    }
-                    var firstChunk = r.Current;
+#pragma warning disable 618
+                    // Hidden access to internals... maybe fix someday or just migrate to Pipes/Memory Sequences
+                    var firstChunk = rms.Chunks.RawChunks[0];
+#pragma warning restore 618
 
+                    if (_ws.State != WebSocketState.Open)
+                    {
+                        Console.WriteLine("catch me");
+                    }
                     // we have data, must be able to read
                     result = _ws.ReceiveAsync((Memory<byte>)firstChunk, _cts.Token).GetAwaiter().GetResult();
                     rms.SetLength(result.Count);
 
                     if (result.EndOfMessage)
                     {
+                        _readSemaphore.Release();
                         return new ValueTask<MemoryStream>(rms);
                     }
 
-                    return ContinueReadAsync(rms);
+                    return ContinueReadAsync(rms, false, null);
                 }
-#else
-                return ContinueReadAsync(null);
-#endif
 
                 if (result.MessageType == WebSocketMessageType.Close)
                 {
                     _cts.Cancel();
                 }
+#else
+                return ContinueReadAsync(null, false, null);
+#endif
 
 #pragma warning disable 4014
                 CloseAsync(null);
@@ -210,12 +248,24 @@ namespace Spreads.SignalW.Client
                 CloseAsync(ex);
 #pragma warning restore 4014
             }
+            finally
+            {
+                // 
+            }
             rms?.Dispose();
             return new ValueTask<MemoryStream>((RecyclableMemoryStream)null);
         }
 
-        private async ValueTask<MemoryStream> ContinueReadAsync(RecyclableMemoryStream rms)
+        private async ValueTask<MemoryStream> ContinueReadAsync(RecyclableMemoryStream rms, bool doAwaitSemaphore, Task pending)
         {
+            if (doAwaitSemaphore) { await _readSemaphore.WaitAsync(_cts.Token); }
+
+            if (pending != null)
+            {
+                // we know it had empty buffer
+                await pending;
+            }
+
             // we have rms with length set to zero of first sync result
             rms = rms ?? RecyclableMemoryStreamManager.Default.GetStream();
 
@@ -223,11 +273,19 @@ namespace Spreads.SignalW.Client
             try
             {
 #if NETCOREAPP2_1
+                if (_ws.State != WebSocketState.Open)
+                {
+                    Console.WriteLine("catch me");
+                }
                 // Do a 0 byte read so that idle connections don't allocate a buffer when waiting for a read
                 var result = await _ws.ReceiveAsync(Memory<byte>.Empty, CancellationToken.None);
                 if (result.MessageType != WebSocketMessageType.Close)
                 {
-                    result = await _ws.ReceiveAsync((Memory<byte>)buffer, _cts.Token);
+                    if (_ws.State != WebSocketState.Open)
+                    {
+                        Console.WriteLine("catch me");
+                    }
+                    result = _ws.ReceiveAsync((Memory<byte>)buffer, _cts.Token).GetAwaiter().GetResult();
                 }
 #else
                 var result = await _ws.ReceiveAsync(new ArraySegment<byte>(buffer), _cts.Token);
@@ -240,8 +298,12 @@ namespace Spreads.SignalW.Client
                     {
 #if NETCOREAPP2_1
                         result = await _ws.ReceiveAsync((Memory<byte>)buffer, _cts.Token);
+                        if (_ws.State != WebSocketState.Open)
+                        {
+                            Console.WriteLine("catch me");
+                        }
 #else
-                    result = await _ws.ReceiveAsync(new ArraySegment<byte>(buffer), _cts.Token);
+                        result = await _ws.ReceiveAsync(new ArraySegment<byte>(buffer), _cts.Token);
 #endif
                     }
                     else
@@ -265,6 +327,7 @@ namespace Spreads.SignalW.Client
             finally
             {
                 ArrayPool<byte>.Shared.Return(buffer);
+                _readSemaphore.Release();
             }
             rms.Dispose();
             return null;

@@ -5,10 +5,17 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Spreads.SignalW.Connections;
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Spreads.SignalW
 {
+
+    internal static class Counters
+    {
+        public static int MessageCount;
+        public static int MaxElapsed;
+    }
 
     public class HubEndPoint<THub> where THub : Hub, new()
     {
@@ -44,7 +51,7 @@ namespace Spreads.SignalW
                 // TODO error logger
                 // _logger.LogError(0, ex, "Error when processing requests.");
                 exception = ex;
-                connection.Channel.TryComplete();
+                await connection.Channel.TryComplete();
             }
             finally
             {
@@ -71,8 +78,7 @@ namespace Spreads.SignalW
         {
             while (true)
             {
-                var task = connection.Channel.ReadAsync();
-                var payload = task.IsCompletedSuccessfully ? task.Result : await task;
+                var payload = await connection.Channel.ReadAsync();
 
                 // Is there a better way of detecting that a connection was closed?
                 if (payload == null)
@@ -80,14 +86,29 @@ namespace Spreads.SignalW
                     break;
                 }
 
-                //if (_logger.IsEnabled(LogLevel.Debug))
-                //{
-                //    _logger.LogDebug($"Received hub invocation payload length: {payload.Length}");
-                //}
+                Counters.MessageCount++;
 
                 await _hub.OnReceiveAsync(payload);
 
                 payload.Dispose();
+
+                // TODO as setting, also log GC time to a series
+                if (Counters.MessageCount % 100000 == 0)
+                {
+                    var sw = new Stopwatch();
+                    sw.Start();
+                    GC.Collect(0, GCCollectionMode.Forced, false);
+                    sw.Stop();
+                    var micros = (sw.ElapsedTicks * 1000000) / Stopwatch.Frequency;
+                    if (micros > Counters.MaxElapsed & Counters.MessageCount > 1000000)
+                    {
+                        Counters.MaxElapsed = (int)micros;
+                    }
+                    Console.WriteLine("GC time: " + micros + " ; max: " + Counters.MaxElapsed);
+                    Console.WriteLine(GC.CollectionCount(0) + " | " + GC.CollectionCount(1) + " | " +
+                                      GC.CollectionCount(2));
+                    Console.WriteLine(GC.GetTotalMemory(false));
+                }
             }
         }
 
@@ -95,7 +116,6 @@ namespace Spreads.SignalW
         {
             hub.Clients = _hubContext.Clients;
             hub.Context = new HubCallerContext(connection);
-            hub.Groups = new GroupManager<THub>(connection, _lifetimeManager);
         }
     }
 }

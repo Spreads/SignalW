@@ -5,12 +5,13 @@
         <AssemblyName>Spreads.SignalW</AssemblyName>
         <RootNamespace>Spreads.SignalW</RootNamespace>
         <LangVersion>7.2</LangVersion>
+        <AssemblyOriginatorKeyFile>..\..\tools\SpreadsKey.snk</AssemblyOriginatorKeyFile>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.Routing" Version="2.1.0" />
         <PackageReference Include="Microsoft.Extensions.Logging" Version="2.1.0" />
-        <PackageReference Include="Spreads.Core" Version="1.0.0-build1805290629R" />
+        <PackageReference Include="Spreads.Core" Version="1.0.0-build1806051344R" />
         <PackageReference Include="System.Threading.Channels" Version="4.5.0" />
     </ItemGroup>
 
